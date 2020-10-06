@@ -1,0 +1,49 @@
+[
+  {
+    "name": "landslides-regolith",
+    "organization": "U.S. Geological Survey",
+    "description": "A Fortran 95 program for estimating soil mantle thickness in a digital landscape for landslide and debris-flow hazard assessment",
+    "version": "Release candidate for 1.0.0",
+    "status": "Development",
+
+    "permissions": {
+      "usageType": "openSource",
+      "licenses": [
+        {
+          "name": "Public Domain, CC0-1.0",
+          "URL": "https://code.usgs.gov/ghsc/lhp/soil_depth/LICENSE.md"
+        }
+      ]
+    },
+
+    "homepageURL": "https://code.usgs.gov/ghsc/lhp/soil_depth",
+    "downloadURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/-/archive/master/soil_depth-master.zip",
+    "disclaimerURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/DISCLAIMER.md",
+    "repositoryUrl": "git@code.usgs.gov:ghsc/lhp/soil_depth.git",
+    "vcs": "git",
+
+    "laborHours": null,
+
+    "tags": [
+      "Natural Hazards",
+      "Geologic Hazards Science Center",
+      "Soil thickness estimates"
+      "Landslides"
+    ],
+
+    "languages": [
+      "Fortran 95",
+      "Fortran 77",
+      "Python 3.6"
+    ],
+
+    "contact": {
+      "name": "Rex Baum",
+      "email": "baum@usgs.gov"
+    },
+
+    "date": {
+      "metadataLastUpdated": "2020-10-06"
+    }
+  }
+]

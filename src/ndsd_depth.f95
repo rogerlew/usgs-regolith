@@ -1,0 +1,246 @@
+! Procedure to compute soil depth based on NDSD transport model (Pelletier & Rasmussen, 2009)
+! 25 May 2017, RLB, Latest revision 13 Aug 2020 (removed nds2_depth)
+  subroutine ndsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cell_row,cell_column,&
+     & indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,dzdygs,del2gs,&
+     & nl_slope_fac,sec_delta,soil_depth,num_steps,chan_thresh,chan_depth,&
+     & contrib_area,sc_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+     & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones)
+  implicit none
+! LOCAL VARIABLES
+  integer::i,i0,j0,l,iup,jup,m,n 
+  integer::ileft,iright,jnorth,jsouth,iup_cn,jup_cn
+  integer::ctr(4),maxd(imax)
+  real(kind = 8)::n100,imax_dble
+  real::Del_dotDelZ_nlso
+  real::resid,resid_cell,resid_max,resid_mean,large !  h1 is trial value of h at cell i
+  real::h1,hmin,lhs,rhs,soil_depth_min,soil_depth_max,num_steps_flt 
+  logical edge(4)
+! FORMAL ARGUMENTS 
+  integer,intent(in)::ulog,imax,ncol,nrow,grd,nodata,cell_row(imax),cell_column(imax)
+  integer,intent(in)::indexed_cell_number(imax),elev_index_lkup(imax),cta(ncol,nrow)
+  integer,intent(in)::num_steps,max_zones,zo(imax)
+	real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis
+	real, intent(in):: depth_max(max_zones),depth_min(max_zones),sc_rad(max_zones)
+  real, intent(in)::pf1(grd)
+  real, intent(in):: chan_thresh,chan_depth,contrib_area(imax),slope_rad(imax)
+  real, intent(in):: dzdxgs(imax),dzdygs(imax),del2gs(imax),nl_slope_fac(imax),sec_delta(imax)
+  real, intent(inout)::soil_depth(imax)
+  real, intent(inout):: unused(imax)
+  real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
+	real (kind = 8),intent(in):: nodat,celsiz !
+	logical:: hump_prod(max_zones) 
+  write(*,*) 'Entering subroutine ndsd_depth'
+! initialize local arrays  
+  large=huge(h1)
+  do i=1,imax
+    if(abs(nl_slope_fac(i))<=tis) cycle
+    trans_x(i)=abs(dzdxgs(i))/nl_slope_fac(i) ! x-component of transport factor
+    trans_y(i)=abs(dzdygs(i))/nl_slope_fac(i) ! y-component of transport factor
+  end do
+  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,nodata)
+  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,nodata)
+  write(*,*) 'd_trans_x_dx max, min', maxval(d_trans_x_dx), minval(d_trans_x_dx)
+  write(*,*) 'd_trans_y_dy max, min', maxval(d_trans_y_dy), minval(d_trans_y_dy)
+  num_steps_flt=float(num_steps)
+  if(max_zones == 1) then
+    maxd=int(num_steps_flt*depth_max(1)); write(*,*) 'num_steps, maxd= ', num_steps,maxd(1)
+  else
+    do i=1,imax
+      maxd(i)=int(num_steps_flt*depth_max(zo(i)))
+    end do
+  end if
+  num_steps_flt=float(num_steps)
+  resid_max=0.;resid_mean=0.
+  ctr=0
+  write(*,*) 'Percent completed using NDSD model'
+  do n=1,imax ! In this loop, n is the cell topographic index, where 1 is the highest cell and imax is the lowest cell.
+! m is the cell number, starting at the upper left corner of the grid and counting left to right, row by row.
+    m=indexed_cell_number(n)
+    if(m > imax .or. m < 1) write(*,*) 'n, m = ', n, m
+    n100=100.d0*dble(n);imax_dble=dble(imax)
+    if(mod(n100,imax_dble)<100) write(*,fmt='(2x,i3,a1)',advance='no') int(n100/imax_dble), '%'
+    if(nl_slope_fac(m)<=tis) then  ! Use minimum soil depth at and above the angle of stability
+       soil_depth(m)=depth_min(zo(m))
+       cycle
+    end if
+    j0=cell_row(m) ! row of cell m
+    i0=cell_column(m) ! column of cell m
+! get elevation index of surrounding cells, paying attention to edge conditions  
+! Edge configuration:
+!
+!            North 3
+!  Left 1               Right 2
+!            South 4
+!
+    ileft=0; iright=0; jnorth=0; jsouth=0; edge=.true.
+    if(i0>1) then
+       if(cta(i0-1,j0)>0) then
+          ileft=elev_index_lkup(cta(i0-1,j0))
+          edge(1)=.false.
+       end if
+    end if
+    if(i0<ncol) then
+       if(cta(i0+1,j0)>0) then
+          iright=elev_index_lkup(cta(i0+1,j0))
+          edge(2)=.false.
+       end if
+    end if
+    if(j0>1) then
+       if(cta(i0,j0-1)>0) then
+          jnorth=elev_index_lkup(cta(i0,j0-1))
+          edge(3)=.false.
+       end if
+    end if
+    if(j0<nrow) then
+       if(cta(i0,j0+1)>0) then
+          jsouth=elev_index_lkup(cta(i0,j0+1))
+          edge(4)=.false.
+       end if
+    end if
+! compare elevation index of neighbors to each other and to cell m (of index n) to find iup and jup.
+    iup=0; jup=0; iup_cn=0; jup_cn=0
+    if(edge(1)) then
+      if (iright<n) then
+        iup=iright
+        iup_cn=indexed_cell_number(iright)
+      end if
+    else if(edge(2)) then
+       if (ileft<n) then
+        iup=ileft
+        iup_cn=indexed_cell_number(ileft)
+      end if
+    else 
+      if (iright<ileft) then
+        iup=iright
+        iup_cn=indexed_cell_number(iright)
+      endif
+      if (ileft<iright) then
+        iup=ileft
+        iup_cn=indexed_cell_number(ileft)
+      endif
+      if (iup>n) iup=0
+    end if
+    if(edge(3)) then
+      if (jsouth<n) then
+        jup=jsouth
+        jup_cn=indexed_cell_number(jsouth)
+      end if
+    else if(edge(4)) then
+       if (jnorth<n) then
+        jup=jnorth
+        jup_cn=indexed_cell_number(jnorth)
+      end if
+    else 
+      if (jnorth<jsouth) then
+        jup=jnorth
+        jup_cn =indexed_cell_number(jnorth)
+      endif
+      if (jsouth<jnorth) then
+        jup=jsouth
+        jup_cn =indexed_cell_number(jsouth)
+      endif
+      if (jup>n) jup=0
+    end if
+! The following code block assumes vertical thickness on RHS consistent with Pelletier & Rasmussen's equation 21.
+! Compute regolith thickness with input from upslope cells, adjusting formula based upon how many upslope cells exist
+    if (iup>0 .and. jup>0) then
+      resid_cell=large; resid=0.
+      ctr(1)=ctr(1)+1
+      if(soil_depth(iup_cn)==0. .and. soil_depth(jup_cn)==0.) write(*,*) 'n,m,j0,i0 ',n,m,j0,i0
+      do l=1,maxd(m)
+        h1=float(l)/num_steps_flt
+        if (hump_prod(zo(m))) then
+          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_delta(m)))
+        else
+          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*exp(-h1/(h0(zo(m))*sec_delta(m)))
+        end if
+        rhs=soil_depth(iup_cn)*trans_x(iup_cn)-h1*trans_x(m)+&
+            & soil_depth(jup_cn)*trans_y(jup_cn)-h1*trans_y(m)
+        resid=abs(lhs-rhs)
+        if(resid<resid_cell) then
+          hmin=h1
+          resid_cell=resid
+        end if
+      end do
+    else if (iup==0 .and. jup>0) then
+      resid_cell=large; resid=0.
+      ctr(2)=ctr(2)+1
+      do l=1,maxd(m)
+        h1=float(l)/num_steps_flt
+        if (hump_prod(zo(m))) then
+          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_delta(m)))
+        else
+          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*exp(-h1/(h0(zo(m))*sec_delta(m)))
+        end if
+! Replace iup terms with with x component of Del(Del(z))/nl_slope_fac)
+        rhs=h1*d_trans_x_dx(m)+soil_depth(jup_cn)*trans_y(jup_cn)-h1*trans_y(m) 
+        resid=abs(lhs-rhs)
+        if(resid<resid_cell) then
+          hmin=h1
+          resid_cell=resid
+        end if
+      end do
+    else if (iup>0 .and. jup==0) then
+      resid_cell=large; resid=0.
+      ctr(3)=ctr(3)+1
+      do l=1,maxd(m)
+        h1=float(l)/num_steps_flt
+        if (hump_prod(zo(m))) then
+          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_delta(m)))
+        else
+          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*exp(-h1/(h0(zo(m))*sec_delta(m)))
+        end if
+! Replace jup terms with y component of Del(Del(z))/nl_slope_fac)
+        rhs=soil_depth(iup_cn)*trans_x(iup_cn)-h1*trans_x(m)+h1*d_trans_y_dy(m) 
+        resid=abs(lhs-rhs)
+        if(resid<resid_cell) then
+          hmin=h1
+          resid_cell=resid
+        end if
+      end do
+    else if (iup==0 .and. jup==0) then
+      resid_cell=large; resid=0.
+      ctr(4)=ctr(4)+1
+      Del_dotDelZ_nlso=d_trans_x_dx(m)+d_trans_y_dy(m)
+      do l=1,maxd(m)
+        h1=float(l)/num_steps_flt
+        if (hump_prod(zo(m))) then
+          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_delta(m)))
+        else
+          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*exp(-h1/(h0(zo(m))*sec_delta(m)))
+        end if
+        rhs=h1*Del_dotDelZ_nlso ! Replace iup and jup terms with Del(Del(z))/nl_slope_fac)
+        resid=abs(lhs-rhs)
+        if(resid<resid_cell) then
+          hmin=h1
+          resid_cell=resid
+        end if
+      end do
+    end if
+    soil_depth(m)=hmin
+    if(resid_cell>resid_max)resid_max=resid_cell
+    resid_mean=resid_mean+resid_cell
+  end do
+  resid_mean=resid_mean/float(imax)
+! Adjust depths in channel areas and bare slopes
+  do i=1,imax
+    if(soil_depth(i)<depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
+! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
+      if(contrib_area(i)>chan_thresh) then 
+         if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+            if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
+         end if
+      end if
+  end do
+  soil_depth_min=minval(soil_depth)
+  soil_depth_max=maxval(soil_depth)
+  write(*,*) ''
+  write(*,*) 'Computed depth using NDSD model'
+  write(*,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
+  write(ulog,*) 'Computed depth using NDSD model'
+  write(ulog,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
+  write(*,*) 'Maximum & mean residuals', resid_max,resid_mean
+  write(ulog,*) 'Maximum & mean residuals', resid_max,resid_mean
+  write(*,*) 'Counters, c, n-s, e-w, peak: ', ctr
+  return 
+  end subroutine ndsd_depth

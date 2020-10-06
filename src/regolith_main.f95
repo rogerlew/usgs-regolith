@@ -1,0 +1,657 @@
+! program to compute soil depth using various topographically based models
+! by Rex L. Baum, U.S. Geological Survey, January 2015
+! VARIABLE DEFINITIONS
+! celsiz -- grid cell spacing/width
+! chan_thresh -- threshold value of upslope contributing for channels
+! chan_depth -- mean depth of alluvial deposits in steep channels (channel gradient > sc/5.)
+! col -- number of columns in grid
+! dif_ratio -- diffusivity ratio, (ro_b*P0)/(ro_s*D), where D is soil diffusivity, 
+!              ro_b and ro_s are density of bedrock and soil, respectively, and 
+!              P0 is maximum bedrock lowering rate on a flat surface.
+! grd -- total number of grid cells (col*row)
+! imax --  number of (non-null) grid cells
+! h0 -- characteristic soil depth, typically 0.5 m.
+! hump_prod -- logical variable true if humped exponential production function used, 
+!              false if ordinary exponential function used
+! nodat -- no-data value
+! nzon -- number of property zones
+! param(6) parami(6) -- grid parameters from headings of ascii grid files from floating point and integer grids, respectively
+! row -- number of rows in ascii grids
+! sc -- angle of stability (degrees)
+! ti -- the smallest value that can be represented by a double precision variable.
+! tis -- the smallest value that can be represented by a single precision variable.
+! trans_model-- sediment transport model used
+!
+! contrib_area() -- upslope contributing area per unit area (ESRI "Flow Accumulation" from ArcGIS).
+!                   multiply by celsiz^2 to obtain total upslope contributing area.
+! cell_row(:) -- row number of each grid cell--reference from upper left corner
+! cell_column(:) -- column number of each grid cell--reference from upper left corner
+! cn(:,:) -- data cell numbers referenced by grid row and column--reference from lower left corner
+! cos_delta(:) -- cos(delta)=sqrt(1+|Del(z)|^2)
+! cta(:,:) -- data cell numbers referenced by grid row and column--reference from upper left corner
+! del2gs(:) -- laplacian of ground surface
+! dzdxbs(:) -- slope of bedrock surface in x coordinate direction
+! dzdxgs(:) -- slope of ground surface in x coordinate direction
+! dzdybs(:) -- slope of bedrock surface in y coordinate direction
+! dzdygs(:) -- slope of ground surface in y coordinate direction
+! d2zdx2gs(:) -- 2nd derivative of ground surface in x corrdinate direction 
+! d2zdy2gs(:) -- 2nd derivative of ground surface in y corrdinate direction
+! unused(:) -- placeholder for output not needed in further computations
+! elev(:) -- digital elevations of ground surface
+! elev0(:,:) -- digital elevations of ground surface, with no-data values set to zero.
+! elev_index_lkup(:) -- index that ranks elevations at grid cells from highest to lowest.
+! elbr(:) -- digital elevations of bedrock surface
+! filtered(:) -- smoothed array output by subroutine gauss_approx()
+! indexed_cell_nember(:) -- cell number, indexed from highest to lowest
+! mag_del_z -- magnitude of gradient of z, |Del(z)|, (tan(delta)), where delta is slope angle of ground surface)
+! mag_del_z_sq -- squared magnitude of gradient of z, |Del(z)|^2, (also tan^2(delta))
+! nl_slope_fac -- 1-(|Del(z)|/Sc)^2, where Sc is the tangent of the "angle of stability"
+! n_points -- an odd integer, greater than 1, that determines the width of the running average used in the smoothing algorithm, gauss_approx
+! pf1 -- grid stored as 1-d array, used to track locations of no-data values
+! power -- exponent of DRS2 polynomial, or upslope area in NASD, NSDA, and WNDX models
+! prhd -- pressure head at base of colluvium
+! ridg -- locations of ridge crests and local topographic high points
+! soil_depth -- computed depth of soil, h
+! sec_delta -- 1/cos(slope angle) = sqrt(1+ |Del(z)|^2)
+! temp -- temporary array to hold one row (line) of grid data (floating point)
+! itemp -- temporary array to hold one row (line) of grid data (integer)
+! trans_x(:) = dzdxgs(i)/nl_slope_fac(i)
+! trans_y(:) = dzdygs(i)/nl_slope_fac(i)
+! zo(:) -- property zone grid
+! zon(:) -- zone ID number
+! wt_depth -- estimated water-table depth grid computed by subroutine darcy.
+! wt_depth_min -- minimum allowed depth to water table
+! z0 -- 
+! z1 --
+! temp1, temp2 -- Arrays to hold intermediate values during smoothing.
+!
+program regolith
+  use read_inputs
+  implicit none
+  integer, parameter:: ulen=27
+  integer:: imax,row,col  
+  integer grd,i,j,j1,mnd,nwf,imx1 
+  integer:: nodata,sctr,patlen,num_steps, num_zones, max_zones, n_points ! Added n_points 8/20/2020 RLB
+  integer:: ncol,nrow,u(ulen)
+  integer,allocatable:: cta(:,:),zo(:),itemp(:),pf2(:)
+  integer, allocatable:: nxt(:),cell_row(:),cell_column(:)
+  integer,allocatable:: dsctr(:),zon(:)
+  integer, allocatable:: indexed_cell_number(:),elev_index_lkup(:) 
+  real:: x1,dipdr,dip,slpdr,chan_thresh,chan_depth, tis 
+  real, allocatable:: h0(:),sc(:),dif_ratio(:),depth_max(:),depth_min(:),C0(:),C2(:)
+  real, allocatable:: sc_rad(:), sc_deg(:)
+  real, allocatable:: elev(:),slope(:),soil_depth(:) 
+  real, allocatable:: plan_view_curv(:),tfg(:),temp(:),pf1(:)
+  real, allocatable:: dzdxgs(:),dzdygs(:),d2zdx2gs(:),d2zdy2gs(:),del2gs(:) 
+  real, allocatable:: mag_del_z(:), mag_del_z_sq(:),sec_delta(:),nl_slope_fac(:),slope_rad(:)
+  real, allocatable:: slopgs(:),dipgs(:),contrib_area(:)
+  real, allocatable:: unused(:),filtered(:),elev0(:,:),depth0(:,:),temp1(:,:),temp2(:,:)
+  real, allocatable:: trans_x(:),trans_y(:),d_trans_x_dx(:),d_trans_y_dy(:)
+  real, allocatable:: Del_dotDelZ_nlso(:), aspect_gs(:)
+  real:: noDataSingle
+  real::dzdxgs_max,dzdygs_max,power
+  real(kind = 8)::pi,param(6),parami(6),ti,dg2rad
+  real(kind = 8):: noDataDouble
+  real (kind = 8):: nodat,celsiz
+  logical::lpvc,ans,lasc,lnfil 
+  logical:: topoSmooth,soilSmooth,hump_prod_any,l_deriv, l_test
+  logical, allocatable:: hump_prod(:) 
+  character (len=255):: outfil,infil
+  character (len=255):: elevfil,slopefil,flo_accfil,pv_curvfil,ndxfil,zonfil
+  character (len=255):: heading(16),size_heading
+  character (len=224):: folder,elfoldr
+  character (len=31):: scratch
+  character (len=16):: suffix ! Length increased from 8 characters
+  character (len=14):: header(6)
+  character (len=14):: elevSmo_fil='RG_elev_Smooth'
+  character (len=11):: bldate
+  character (len=10):: time
+  character (len=8):: date
+  character (len=8):: slopgs_fil='RG_slope' ! output file for computed ground-surface slope angle grid
+  character (len=7):: vrsn ! version number
+  character (len=4):: trans_model,grxt
+  character (len=2):: pid(4)
+  character (len=1):: tb ! tab character
+! first executable statement ............  
+  call date_and_time(date,time)
+  noDataDouble=-9999.D0; noDataSingle=-9999.
+  u=(/11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37/)
+  pid=(/'TI','GM','TR','RG'/)
+  pi=3.141592653589793
+  dg2rad=pi/180.D0
+  vrsn='0.3.02j'; bldate='05 Oct 2020'
+  mnd=6 ! Default value assumed if no integer grid is read.
+  tb=char(9)
+  call rgbanner(vrsn,bldate)
+!  read initialization file
+!! ********** Change zoned input parameters from dif_ratio to dif_ratio_list, etc *****************
+  call regolini(u(1),u(2),dg2rad,trans_model,chan_thresh,chan_depth,&
+     & num_zones,max_zones,num_steps,hump_prod,sc_deg,suffix,folder,&
+     & elevfil,slopefil,flo_accfil,pv_curvfil,ndxfil,zonfil,heading,lasc,&
+     & h0,sc,dif_ratio,depth_max,depth_min,C0,C2,zon,vrsn,bldate,date,time,&
+     & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_test,power)
+  allocate(sc_rad(max_zones))
+  sc_rad=sc_deg*dg2rad
+! determine grid size parameters RLB 4/18/2011
+  patlen=scan(elevfil,'/\',.true.) ! find end of folder name
+  elfoldr=elevfil(1:patlen) ! path to elevation grid
+  ans=.false.
+  do i=1,4 ! check for presence of grid size file
+    elfoldr=adjustl(elfoldr)
+    infil=trim(elfoldr)//pid(i)//'grid_size.txt'
+    infil=adjustl(infil)
+    inquire (file=trim(infil),exist=ans)
+    write(*,*) trim(infil), ans
+    if(ans) exit
+  end do
+  if(ans) then ! read existing grid size file
+    open (u(3),file=trim(infil),status='unknown',err=420)
+    read (u(3),'(a)') size_heading
+    read (u(3),*) imax,row,col,nwf
+    close (u(3))
+  else ! read grid size data from elevation grid and create grid size file
+    infil=elevfil; infil=adjustl(infil)
+    call ssizgrd(row,col,celsiz,nodat,imax,u(12),infil,header,u(1))
+    outfil=trim(elfoldr)//pid(3)//'grid_size.txt'
+    outfil=adjustl(outfil)
+    open (u(3),file=trim(outfil),status='unknown',err=410)
+    write (u(3),*) 'imax      row      col      nwf'
+    nwf=1 ! dsctr is computed by TopoIndex; dsctr=1 is default value for no runoff routing.
+    write (u(3),*) imax,row,col,nwf
+    write (u(3),*) ''
+    close (u(3))
+  end if
+  write(u(1),*) 'Grid size parameters from ', trim(infil)
+  write (u(1),*) trim(adjustl(size_heading))
+  write (u(1),*) imax,row,col,nwf
+! Allocate & initialize arrays 
+  grd=row*col
+  imx1=imax
+  allocate(pf1(grd),pf2(grd),tfg(imax),nxt(imax))
+  allocate(dsctr(imax+1),slope(imax),slope_rad(imax))
+  allocate(temp(col),itemp(col))
+  allocate(soil_depth(imax),zo(imax),contrib_area(imax))
+  allocate(elev(imax)) 
+  allocate(dzdxgs(imax),dzdygs(imax),dipgs(imax),slopgs(imax))
+  allocate(cta(col,row),cell_row(imax),cell_column(imax))
+  if(l_deriv .and. trim(slopefil)=='none' .or. topoSmooth) then
+    allocate(aspect_gs(imax))
+    aspect_gs=0.
+  end if
+  if(topoSmooth .or. soilSmooth) then
+    allocate(filtered(imax))
+    filtered=0.
+  endif
+  if(trans_model(1:3)=='DRS')then
+    allocate(plan_view_curv(imax))
+    plan_view_curv=0.
+  end if
+  pf1=0.;pf2=0; tfg=0.  !
+  nxt=0; dsctr=0; zo=0
+  slope=0.; slope_rad=0. 
+  temp=0.;itemp=0 
+  soil_depth=0.; zo=1; contrib_area=0; elev=0.;  
+  dzdxgs=0.;dzdygs=0.;dipgs=0.;slopgs=0.
+! Choose file extension for grid files, Added 4/14/2010
+  grxt='.txt'
+  if(lasc) grxt='.asc'
+! *****************************************************************
+!  read gridded data from GIS
+  write (*,*) 'Reading input grids'
+  write(u(1),*) 'Input file name,            Cell count'
+!  read digital elevations, elev 
+  inquire(file=elevfil,exist=lnfil)
+  write(*,*) 'Status of elevfil:', lnfil, trim(elevfil)
+  if(lnfil) then
+    call srdgrd(grd,col,ncol,nrow,celsiz,nodat,&
+     &    elev,pf1,sctr,imax,temp,u(4),elevfil,param,header,u(1))
+    write(u(1),*) 'Elevation grid'
+    write(u(1),*) trim(elevfil),sctr,' data cells'
+    if(sctr/=imax .or. ncol/=col .or. nrow/=row) write (u(1),*) 'Grid mismatch ',trim(elevfil)
+  else
+    write(u(1),*) 'Elevation grid does not exist'
+    write(*,*) 'Elevation grid does not exist'
+    close(u(1))
+    stop 'Edit rg_in.txt and restart program'
+  end if
+! *****************************************************************
+  write(u(1),*) '---------------******---------------'
+! Create 2-d array, cta(j,i) that maps grid cell numbers (1-d array) to j-i (column-row)coordinates
+  nodata=int(nodat) ! null or no-data value for integer grids and arrays
+  cta=nodata
+  call grid_count(ncol,nrow,imax,nodata,nodat,cell_row,cell_column,cta,pf1) 
+! (Optional) Smooth Elevation grid
+  if(topoSmooth) then
+    allocate(elev0(col,row),temp1(col,row),temp2(col,row))
+    elev0=0. ! initialize elev0(:,:) and copy values from elev(:)
+    temp1 = 0.; temp2 = 0.
+    do i=1,nrow
+      do j=1,ncol
+        if(cta(j,i)/=nodata) elev0(j,i)=elev(cta(j,i))
+      end do
+    end do  
+    call gauss_approx(elev0,pf1,cta,imax,ncol,nrow,celsiz,celsiz,nodat,&
+                      &nodata,filtered,temp1,temp2,n_points)  ! last parameter is width of moving average window.
+    elev=filtered
+    scratch=trim(elevSmo_fil)
+    scratch=adjustl(scratch)
+    outfil=trim(folder)//trim(scratch)//grxt
+    call ssvgrd(filtered,imax,pf1,row,col,u(10),noDataSingle,param,u(1),&
+      & outfil,ti,header)
+    write(u(1),*) 'Applied optional smoothing to soil depth grid'
+    deallocate(elev0,temp1,temp2)
+  endif
+!  read slope angles
+  dzdxgs_max=0.; dzdygs_max=0.
+  if(trim(slopefil)=='none' .or. topoSmooth)then
+! compute east-west and north-south slope gradients
+    write(*,*) 'Computing E-W & N-S elevation gradients'
+    call xyslope(elev,pf1,cta,imax,ncol,nrow,dzdxgs,dzdygs,celsiz,celsiz,nodat,nodata)
+    dzdxgs_max=maxval(dzdxgs); dzdygs_max=maxval(dzdygs)
+    write(*,*) 'Max X and Y slopes:', dzdxgs_max, dzdygs_max
+    if(l_deriv .and. trim(slopefil)=='none' .or. topoSmooth) then
+      do i=1,imax
+        call aspect(dzdxgs(i),dzdygs(i),dipdr,dip,slpdr)
+        dipgs(i)=dip ! Angle of steepest descent in radians
+        slopgs(i)=dip*180./pi  ! Angle of steepest descent in degrees
+        if(l_deriv .and. trim(slopefil)=='none' .or. topoSmooth) aspect_gs(i) = dipdr*180./pi
+      end do 
+    else
+      do i=1,imax
+        call aspect(dzdxgs(i),dzdygs(i),dipdr,dip,slpdr)
+        dipgs(i)=dip ! Angle of steepest descent in radians
+        slopgs(i)=dip*180./pi  ! Angle of steepest descent in degrees
+      end do 
+    end if
+    slope = slopgs ! Fix discrepancy between slope and slopgs.  
+    slope_rad = dipgs 
+! Save ground-surface slope file 
+    scratch=trim(slopgs_fil)
+    if(topoSmooth) scratch=trim(slopgs_fil)//'_smo'
+    scratch=adjustl(scratch)
+    outfil=trim(folder)//trim(scratch)//grxt
+    call ssvgrd(slopgs,imax,pf1,row,col,u(13),noDataSingle,param,u(1),&
+      & outfil,ti,header)
+  else
+    call srdgrd(grd,col,ncol,nrow,celsiz,nodat,&
+     &  slope,pf1,sctr,imax,temp,u(5),slopefil,param,header,u(1))
+    write(u(1),*) 'slope angle grid'
+    write(u(1),*) trim(slopefil),sctr,' data cells'
+    if(sctr/=imax .or. ncol/=col .or. nrow/=row) then
+      write(*,*) 'Grid mismatch: ', trim(slopefil)
+      write(*,*) 'Check slope grid and (or) initialization file against elevation grid.'
+      write(u(1),*) 'Grid mismatch: ', trim(slopefil)
+      write(u(1),*) 'Check slope grid and (or) initialization file against elevation grid.'
+    end if
+    slope_rad=slope*dg2rad ! convert slope angles to radians
+  endif   
+!  read flow-accumulation grid (upslope contributing area per unit grid cell)
+  inquire(file=flo_accfil,exist=lnfil)
+  write(*,*) 'Status of flo_accfil:', lnfil, trim(flo_accfil)
+  if(lnfil) then
+    call srdgrd(grd,col,ncol,nrow,celsiz,nodat,&
+    & contrib_area,pf1,sctr,imax,temp,u(6),flo_accfil,param,header,u(1))
+    write(u(1),*) 'Flow accumulation grid'
+    write(u(1),*) trim(flo_accfil),sctr,' data cells'
+    if(sctr/=imx1) write (u(1),*) 'Grid mismatch ',trim(flo_accfil)
+    chan_thresh=chan_thresh/(celsiz*celsiz) ! normalize by grid cell area.
+  else
+    write(u(1),*) 'Flow accumulation grid does not exist'
+    write(u(1),*) 'Edit rg_in.txt and restart program'
+    write(*,*) 'Flow accumulation grid does not exist'
+    close(u(1))
+    stop 'Edit rg_in.txt and restart program'
+  end if
+! read cell number index to determine order of computation for NDSD models
+  if(trans_model(1:3) == 'NDS') then
+    allocate(elev_index_lkup(imax),indexed_cell_number(imax))
+    elev_index_lkup=0; indexed_cell_number=0 
+    inquire(file=ndxfil,exist=lnfil)
+    write(*,*) 'Status of ndxfil:', lnfil, trim(ndxfil)
+    if(lnfil) then
+       call irdgrd(grd,col,ncol,nrow,celsiz,nodata,mnd,&
+       &elev_index_lkup,pf2,sctr,imax,itemp,u(7),ndxfil,parami,header,u(1))
+       write(u(1),*) 'Cell index grid'
+       write(u(1),*) trim(ndxfil),sctr,' data cells'
+       if(sctr/=imx1) write (u(1),*) 'Grid mismatch ',trim(ndxfil)
+        do i=1,imax
+          j1=elev_index_lkup(i) ! grid cell number of the ith cell in decending elevation
+          indexed_cell_number(j1)=i ! elevaton index (highest to lowest) of j1th cell 
+        end do
+    else
+      write(u(1),*) 'Cell index grid needed by NDSD models does not exist.'
+      write(*,*) 'Cell index grid needed by NDSD models does not exist.'
+      close(u(1))
+      stop 'Edit rg_in.txt and restart program'
+    end if
+  end if
+! read plan-view curvature grid 
+  if(trans_model=='DRS3')then
+    inquire(file=pv_curvfil,exist=lpvc)
+    write(*,*) 'Status of pv_curvfil:', lpvc, trim(pv_curvfil)
+    if(lpvc) then
+      call srdgrd(grd,col,ncol,nrow,celsiz,nodat,&
+      & plan_view_curv,pf1,sctr,imax,temp,u(11),pv_curvfil,param,header,u(1))
+      write(u(1),*) 'Plan-view curvature grid'
+      write(u(1),*) trim(pv_curvfil),sctr,' data cells'
+      if(sctr/=imx1) write (u(1),*) 'Grid mismatch ', trim(pv_curvfil)
+    else
+      write(u(1),*) 'P-V curvature grid, ', trim(pv_curvfil), ' does not exist'
+      write(u(1),*) 'Check file name and location or select a different model.'
+      write(*,*) 'P-V curvature grid, ', trim(pv_curvfil), ' does not exist'
+      write(*,*) 'Check file name and location or select a different model.'
+      close(u(1))
+      stop
+    end if
+  end if
+! Import property zone grid
+  if(num_zones > 1)then
+    ans=.false.
+    inquire (file=trim(zonfil),exist=ans)
+    if(ans) then
+      call irdgrd(grd,col,ncol,nrow,celsiz,nodata,mnd,&
+             &   zo,pf2,sctr,imax,itemp,u(11),zonfil,parami,header,u(1))
+      write(u(1),*) 'Property zone grid'
+      write(u(1),*) trim(zonfil),sctr,' data cells'  
+    else
+      write(u(1),*) 'Property zone grid does not exist'
+      write(u(1),*) 'Check file name and location.'
+      write(*,*) 'Property zone grid does not exist'
+      write(*,*) 'Check file name and location.'
+      close(u(1))
+      stop
+    endif
+  else
+    zo=1; zon=1 ! only one property zone.
+    write(*,*) 'Property zone grid not required'
+    write(u(1),*) 'Property zone grid not required'
+  end if
+! compute gradients and related quantities
+  if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then 
+    allocate(mag_del_z(imax), mag_del_z_sq(imax),sec_delta(imax),nl_slope_fac(imax))
+    allocate(unused(imax))
+    allocate(trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax))
+    mag_del_z=0.;mag_del_z_sq=0.;sec_delta=0.;nl_slope_fac=0.
+    trans_x=0.;trans_y=0.;d_trans_x_dx=0.;d_trans_y_dy=0.;unused=0.
+! compute east-west and north-south slope gradients
+    if(dzdxgs_max*dzdygs_max==0.)then
+      write(*,*) 'Computing E-W & N-S elevation gradients'
+      call xyslope(elev,pf1,cta,imax,ncol,nrow,dzdxgs,dzdygs,celsiz,celsiz,nodat,nodata)
+    endif 
+! compute magnitude and squared magnitude of elevation gradient vector, Del z,
+! non-linear slope factor, 1 - (|Del (z)|/Sc)^2, and 1/cos(delta), where delta is the slope angle of the ground surface
+    write(*,*) 'Computing magnitude and related quantities for elevation gradients'
+    do i=1,imax
+      mag_del_z_sq(i)=dzdxgs(i)*dzdxgs(i)+dzdygs(i)*dzdygs(i)
+      mag_del_z(i)=sqrt(mag_del_z_sq(i))
+      nl_slope_fac(i)=1.d0-mag_del_z_sq(i)/(sc(zo(i))*sc(zo(i)))
+      sec_delta(i)=sqrt(1+mag_del_z_sq(i))
+    end do    
+    tis=tiny(x1)
+  end if
+! compute soil_depth according to different soil-depth models
+  write(*,*) 'Selecting depth model'
+  select case(trans_model)
+    case('DRS1'); call derose(u(1),imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
+      & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,dif_ratio,depth_max,&
+      & depth_min,C0,C2,zo,max_zones,power) ! DeRose exponential formula 
+    case('DRS2'); call derose(u(1),imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
+      & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,dif_ratio,depth_max,&
+      & depth_min,C0,C2,zo,max_zones,power) ! DeRose polynomial formula 
+    case('DRS3'); call derose(u(1),imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
+      & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,dif_ratio,depth_max,&
+      & depth_min,C0,C2,zo,max_zones,power) ! DeRose exponential formula with curvature 
+    case('WNDX'); call wetness_ndx(u(1),imax,chan_thresh,chan_depth,sc_rad,dg2rad,&
+      & contrib_area,slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power) ! Modified wetness index 
+    case('LCSD') ! Classic curvature-based formula
+      if (l_deriv .or. l_test) then
+        allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
+        d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
+        call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
+           & celsiz,celsiz,nodat,nodata)
+      end if
+      if(l_test) then ! Pass 2nd derivatives from laplacian subroutine.
+        call lcsd_depth(u(1),imax,col,row,grd,celsiz,nodat,nodata,cta,chan_thresh,&
+        & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,slope_rad,&
+        & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+        & unused,trans_x,trans_y,d2zdx2gs,d2zdy2gs,zo,max_zones,l_test)
+      else ! Compute 2nd derivatives from 1st derivatives for greater smoothing.
+        call lcsd_depth(u(1),imax,col,row,grd,celsiz,nodat,nodata,cta,chan_thresh,&
+        & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,slope_rad,&
+        & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+        & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test)
+      endif
+    case('NSD');  call nsd_depth(u(1),imax,col,row,grd,celsiz,nodat,nodata,cta,chan_thresh,&
+      & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
+      & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test)
+    case('NSDA'); call nsd_a_depth(u(1),imax,col,row,grd,celsiz,nodat,nodata,cta,chan_thresh,&
+      & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
+      & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
+    case('NASD'); call nasd_depth(u(1),imax,col,row,grd,celsiz,nodat,nodata,cta,chan_thresh,&
+      & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
+      & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
+    case('NDSD') 
+      allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
+      d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
+      call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
+         & celsiz,celsiz,nodat,nodata)
+      call ndsd_depth(u(1),imax,col,row,grd,celsiz,nodat,nodata,cell_row,cell_column,&
+         & indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,dzdygs,del2gs,&
+         & nl_slope_fac,sec_delta,soil_depth,num_steps,chan_thresh,chan_depth,&
+         & contrib_area,sc_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+         & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones)
+    case default
+      trans_model = 'WNDX'
+      call wetness_ndx(u(1),imax,chan_thresh,chan_depth,sc_rad,dg2rad,&
+         & contrib_area,slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power)
+  end select 
+  write(u(1),*) 'Range soil depth: ', minval(soil_depth), maxval(soil_depth)
+! (Optional) Apply smoothing algorithm to computed soil depth.
+  if(soilSmooth)then
+    allocate(depth0(col,row),temp1(col,row),temp2(col,row))
+    depth0=0. ! ! initialize depth0(:,:) and copy values from soil_depth(:)
+    temp1=0.; temp2=0.
+    do i=1,nrow
+      do j=1,ncol
+        if(cta(j,i)/=nodata) depth0(j,i)=soil_depth(cta(j,i))
+      end do
+    end do  
+    call gauss_approx(depth0,pf1,cta,imax,ncol,nrow,celsiz,celsiz,nodat,&
+                      &nodata,filtered,temp1,temp2,n_points) ! last parameter is width of moving average window.
+    soil_depth=filtered
+    write(u(1),*) 'Applied optional smoothing to soil depth grid'
+    write(u(1),*) 'Range smoothed soil depth: ', minval(soil_depth), maxval(soil_depth)
+    deallocate(depth0,temp1,temp2)
+  endif
+!
+! Save results    
+  write(*,*) 'Saving results'
+  ti=tiny(param(1)) 
+  do i=1,imx1
+    tfg(i)=soil_depth(i)
+  end do
+! Save soil depth file  
+  scratch='RG_'//trim(trans_model)//"_"
+  scratch=adjustl(scratch)
+  hump_prod_any=.false.
+  do i=1,max_zones
+    if(hump_prod(i)) hump_prod_any=.true.
+  end do
+  if(hump_prod_any) scratch=trim(scratch)//'hmp_'
+  if(soilSmooth) scratch=trim(scratch)//'smo_'
+  if(l_test) scratch=trim(scratch)//'test_'
+  outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+  call ssvgrd(tfg,imax,pf1,row,col,u(9),noDataSingle,param,u(1),&
+   & outfil,ti,header)
+! Save series of files with derivatives or related quantities
+  if(l_deriv) then
+  ! save dzdxgs
+      scratch = 'RG_dzdxgs_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(dzdxgs,imax,pf1,row,col,u(17),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+  ! save dzdygs
+      scratch = 'RG_dzdygs_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(dzdygs,imax,pf1,row,col,u(18),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+  ! save trans_nsd
+    if(trans_model(1:3)=='NSD') then
+      scratch = 'RG_trans_nsd_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(unused,imax,pf1,row,col,u(19),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    endif
+  ! save trans_nsd
+    if(trans_model(1:3)=='NAS') then
+      scratch = 'RG_trans_nasd_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(unused,imax,pf1,row,col,u(19),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    endif
+  ! save d2zdx2gs
+    if(trans_model(1:3)=='NDS' .or. trans_model == 'LCSD') then
+      scratch = 'RG_d2zdx2gs_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(d2zdx2gs,imax,pf1,row,col,u(19),noDataSingle,param,u(1),&
+       & outfil,ti,header)
+    endif
+  ! save d2zdy2gs
+    if(trans_model(1:3)=='NDS' .or. trans_model == 'LCSD') then
+      scratch = 'RG_d2zdy2gs_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(d2zdy2gs,imax,pf1,row,col,u(20),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    endif
+  ! save laplacian   
+    if(trans_model(1:3)=='NDS' .or. trans_model == 'LCSD') then
+      scratch='RG_del2gs_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(del2gs,imax,pf1,row,col,u(21),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    end if
+  ! save mag_del_z_sq   
+    if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then
+      scratch='RG_mag_del_z_sq_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(mag_del_z_sq,imax,pf1,row,col,u(22),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    end if
+  ! save sec_delta   
+    if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then
+      scratch='RG_sec_delta_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(sec_delta,imax,pf1,row,col,u(23),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    end if
+  ! save nl_slope_fac   
+    if(trans_model(1:1)=='N') then
+      scratch='RG_nl_slope_fac_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(nl_slope_fac,imax,pf1,row,col,u(24),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    end if
+  ! save trans_x   
+    if(trans_model(1:1)=='N') then
+      scratch='RG_trans_x_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(trans_x,imax,pf1,row,col,u(25),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    end if
+  ! save trans_y 
+    if(trans_model(1:1)=='N') then
+      scratch='RG_trans_y_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(trans_y,imax,pf1,row,col,u(26),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    end if
+  ! save Del_dotDelZ_nlso   
+    if(trans_model=='NDSD') then
+      allocate(Del_dotDelZ_nlso(imax))
+      Del_dotDelZ_nlso=0.
+      Del_dotDelZ_nlso=d_trans_x_dx+d_trans_y_dy
+      scratch='RG_Del_dotDelZ_nlso_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(Del_dotDelZ_nlso,imax,pf1,row,col,u(27),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    end if
+  ! save aspect_gs  
+    if(trim(slopefil)=='none' .or. topoSmooth)then  
+      scratch='RG_aspect_gs_'
+      scratch=adjustl(scratch)
+      if(soilSmooth) scratch=trim(scratch)//'smo_'
+      outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
+      call ssvgrd(aspect_gs,imax,pf1,row,col,u(26),noDataSingle,param,u(1),&
+       & outfil,ti,header)    
+    end if
+  end if
+!
+! Final
+  write (*,*) 'Regolith finshed!'
+  write (u(1),*) 'Regolith finished normally'
+  call date_and_time(date,time)
+  write (u(1),*) 'Date ',date(5:6),'/',date(7:8),'/',date(1:4)
+  write (u(1),*) 'Time ',time(1:2),':',time(3:4),':',time(5:6)
+  close (u(1))
+  stop '0'
+! Error reporting   
+  410  continue
+    write (*,*) 'Error opening output file in Regolith main program'
+    write (*,*) '--> ',outfil
+    write (*,*) 'Check file path and status'
+    write (u(1),*) 'Error opening output file in Regolith main program'
+    write (u(1),*) '--> ',outfil
+    write (u(1),*) 'Check file path and status'
+    write(*,*) 'Press RETURN to exit'
+    read*
+  stop '410'
+  420  continue
+    write (*,*) 'Error opening input file in Regolith main program'
+    write (*,*) '--> ',infil
+    write (*,*) 'Check file path and status'
+    write (u(1),*) 'Error opening input file in Regolith main program'
+    write (u(1),*) '--> ',infil
+    write (u(1),*) 'Check file path and status'
+    write(*,*) 'Press RETURN to exit'
+    read*
+  stop '420'
+  430  continue
+    write (*,*) 'Attempt to read past end of file in Regolith main program'
+    write (*,*) '--> ',infil
+    write (*,*) 'Check file contents and value of Imax'
+    write (u(1),*) 'Attempt to read past end of file in Regolith main program'
+    write (u(1),*) '--> ',infil
+    write (u(1),*) 'Check file contents and value of Imax'
+    write(*,*) 'Press RETURN to exit'
+    read*
+  stop '430'
+end program regolith
