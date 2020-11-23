@@ -119,7 +119,7 @@ program regolith
   pid=(/'TI','GM','TR','RG'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02j'; bldate='05 Oct 2020'
+  vrsn='0.3.02k'; bldate='23 Nov 2020'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -614,7 +614,6 @@ program regolith
        & outfil,ti,header)    
     end if
   end if
-!
 ! Final
   write (*,*) 'Regolith finshed!'
   write (u(1),*) 'Regolith finished normally'

@@ -1,6 +1,6 @@
 subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
 ! Compute x and y components of slope for digital elevation grids, 
-! Rex L. Baum, USGS, August 2011, Latest revision 29 May 2019.
+! Rex L. Baum, USGS, August 2011, Latest revision 23 Nov 2020.
   implicit none
 !
 ! LOCAL VARIABLES
@@ -22,7 +22,7 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
         yedge=0
 ! Test for y-edge
         if(i==1) yedge=1
-        if(i>1) then 
+        if(i>1 .and. yedge==0) then 
           if(z1(j,i-1)==null) yedge=1
         end if
         if(i==nrow) yedge=2
@@ -36,27 +36,31 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
 ! Case formulas revised 5/29/2019 to handle narrow rows/columns of data cells between null cells
         case(1) ! north edge
           if(cta(j,i)/=nodati) then
-            if(cta(j,i+1)==nodati) then
+            if(cta(j,i+1)==nodati) then ! not enough ppoints to compute slope
               dzdy(cta(j,i)) = 0.
-            else if(i<nrow-2 .and. cta(j,i+2)==nodati .or. i==nrow-2) then
-              dzdy(cta(j,i)) = (-z(cta(j,i+1))+z(cta(j,i)))/dely
-            else if(i<nrow-2) then
+            else if(i<=nrow-2) then
+              if(cta(j,i+2)==nodati) then ! Use 2-point forward difference formula
+                dzdy(cta(j,i)) = (-z(cta(j,i+1))+z(cta(j,i)))/dely
+              end if
+            else if(i<nrow-2) then ! Use 3-point forward difference formula
               dzdy(cta(j,i)) =&
               & (-4.d0*z(cta(j,i+1))+z(cta(j,i+2))+3.d0*z(cta(j,i)))/(2.d0*dely)
             endif
           endif
         case(2) ! south edge
           if(cta(j,i)/=nodati) then
-            if(cta(j,i-1)==nodati) then
+            if(cta(j,i-1)==nodati) then ! not enough ppoints to compute slope
               dzdy(cta(j,i)) = 0.
-            else if(i>2 .and. cta(j,i-2)==nodati .or. i==2) then
-              dzdy(cta(j,i)) = (z(cta(j,i-1))-z(cta(j,i)))/dely
-            else if(i>2) then 
+            else if(i>=2) then
+              if(cta(j,i-2)==nodati) then ! Use 2-point backward difference formula
+                dzdy(cta(j,i)) = (z(cta(j,i-1))-z(cta(j,i)))/dely
+              end if
+            else if(i>2) then  ! Use 3-point backward difference formula
               dzdy(cta(j,i)) =&
               & (4.d0*z(cta(j,i-1))-z(cta(j,i-2))-3.d0*z(cta(j,i)))/(2.d0*dely)
             endif
           endif
-        case(5) ! isolated finger
+        case(5) ! isolated finger, not enough ppoints to compute slope
           if(cta(j,i)/=nodati) dzdy(cta(j,i)) = 0.
         case default
 ! Central difference formula computes slope components inside grid
@@ -83,25 +87,29 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
           if(cta(j,i)/=nodati) then
             if(cta(j-1,i)==nodati) then
               dzdx(cta(j,i)) = 0.
-            else if(j>2 .and. cta(j-2,i)==nodati .or. j==2) then
-              dzdx(cta(j,i)) = (z(cta(j,i))-z(cta(j-1,i)))/delx
-            else if(j>2) then
+            else if(j>=2) then
+              if(cta(j-2,i)==nodati) then ! Use 2-point backward difference formula
+                dzdx(cta(j,i)) = (z(cta(j,i))-z(cta(j-1,i)))/delx
+              end if
+            else if(j>2) then ! Use 3-point backward difference formula
               dzdx(cta(j,i)) =&
               & (-4.d0*z(cta(j-1,i))+z(cta(j-2,i))+3.d0*z(cta(j,i)))/(2.d0*delx)
             endif
           endif
         case(4) ! west/left edge
           if(cta(j,i)/=nodati) then
-            if(cta(j+1,i)==nodati) then
+            if(cta(j+1,i)==nodati) then ! not enough ppoints to compute slope
               dzdx(cta(j,i)) = 0.
-            else if (j<ncol-2 .and. cta(j+2,i)==nodati .or. j==ncol-2) then
-              dzdx(cta(j,i)) = (z(cta(j+1,i))-z(cta(j,i)))/delx
-            else if(j<ncol-2) then
+            else if (j<=ncol-2) then ! Use 2-point forward difference formula
+              if (cta(j+2,i)==nodati) then
+                dzdx(cta(j,i)) = (z(cta(j+1,i))-z(cta(j,i)))/delx
+              end if
+            else if(j<ncol-2) then ! Use 3-point forward difference formula
               dzdx(cta(j,i)) =&
               & (4.d0*z(cta(j+1,i))-z(cta(j+2,i))-3.d0*z(cta(j,i)))/(2.d0*delx)
             endif
           endif
-        case(6) ! isolated finger
+        case(6) ! isolated finger, not enough ppoints to compute slope
           if(cta(j,i)/=nodati) dzdx(cta(j,i)) = 0.
         case default
 ! Central difference formula computes slope components inside grid
