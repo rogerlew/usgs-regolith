@@ -38,21 +38,30 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
 ! Case formulas revised 29 May 2019 to handle narrow rows or columns of cells bounded by null (no-data) cells.
         case(1) ! north edge
           if(cta(j,i) /= nodati) then
-            if(cta(j,i+1) == nodati .or. cta(j,i+2) == nodati) then
-              d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
-            else ! Apply forward-difference formula at edge
-              d2zdy2(cta(j,i)) =&
-              & (z(cta(j,i+2)) -2.d0*z(cta(j,i+1)) + z(cta(j,i)))/(dely*dely)
-            endif
+            if(i>=row-1) then
+              d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivative
+            else
+              if(cta(j,i+1) == nodati .or. cta(j,i+2) == nodati) then
+                d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivative
+                cycle
+              else ! Apply forward-difference formula at edge
+                d2zdy2(cta(j,i)) =&
+                & (z(cta(j,i+2)) -2.d0*z(cta(j,i+1)) + z(cta(j,i)))/(dely*dely)
+              end if
+            end if
           endif
         case(2) ! south edge
           if(cta(j,i) /= nodati) then
-            if(cta(j,i-1) == nodati .or. cta(j,i-2) == nodati) then
+            if(i<=2) then
               d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
-            else! Apply backward-difference formula at edge
-              d2zdy2(cta(j,i)) =&
-              & (z(cta(j,i-2)) -2.d0*z(cta(j,i-1)) + z(cta(j,i)))/(dely*dely)
-            endif
+            else
+              if(cta(j,i-1) == nodati .or. cta(j,i-2) == nodati) then
+                d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
+              else! Apply backward-difference formula at edge
+                d2zdy2(cta(j,i)) =&
+                & (z(cta(j,i-2)) -2.d0*z(cta(j,i-1)) + z(cta(j,i)))/(dely*dely)
+              endif
+            end if
           endif
         case(5) ! isolated finger, not enough points to compute the 2nd derivatives
           if(cta(j,i)/=nodati) d2zdy2(cta(j,i)) = 0.
@@ -81,21 +90,29 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
         select case (xedge)
         case(3) ! east edge
           if(cta(j,i) /= nodati) then
-            if(cta(j-1,i) == nodati .or. cta(j-2,i) == nodati) then
+            if (j<=2) then
               d2zdx2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
-            else! Apply backward-difference formula at edge
-              d2zdx2(cta(j,i)) =&
-              & (z(cta(j-2,i)) -2.d0*z(cta(j-1,i)) + z(cta(j,i)))/(delx*delx)
-            endif
+            else
+              if(cta(j-1,i) == nodati .or. cta(j-2,i) == nodati) then
+                d2zdx2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
+              else! Apply backward-difference formula at edge
+                d2zdx2(cta(j,i)) =&
+                & (z(cta(j-2,i)) -2.d0*z(cta(j-1,i)) + z(cta(j,i)))/(delx*delx)
+              endif
+            end if
           endif
         case(4) ! west edge
           if(cta(j,i) /= nodati) then
-            if(cta(j+1,i) == nodati .or. cta(j+2,i) == nodati) then
+            if(j>=col-1)then
               d2zdx2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
-            else! Apply forward-difference formula at edge
-              d2zdx2(cta(j,i)) =&
-              & (z(cta(j+2,i)) -2.d0*z(cta(j+1,i)) + z(cta(j,i)))/(delx*delx)
-            endif
+            else
+              if(cta(j+1,i) == nodati .or. cta(j+2,i) == nodati) then
+                d2zdx2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
+              else! Apply forward-difference formula at edge
+                d2zdx2(cta(j,i)) =&
+                & (z(cta(j+2,i)) -2.d0*z(cta(j+1,i)) + z(cta(j,i)))/(delx*delx)
+              endif
+            end if
           endif
         case(6) ! isolated finger, not enough points to compute the 2nd derivatives
           if(cta(j,i)/=nodati) d2zdx2(cta(j,i)) = 0.

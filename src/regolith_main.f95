@@ -119,7 +119,7 @@ program regolith
   pid=(/'TI','GM','TR','RG'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02k'; bldate='23 Nov 2020'
+  vrsn='0.3.02l'; bldate='24 Nov 2020'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
