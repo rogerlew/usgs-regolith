@@ -69,7 +69,7 @@ program regolith
   use read_inputs
   implicit none
   integer, parameter:: ulen=27
-  integer:: imax,row,col  
+  integer:: imax,row,col, chek_row, chek_col, chek_celsiz, chek_imax
   integer grd,i,j,j1,mnd,nwf,imx1 
   integer:: nodata,sctr,patlen,num_steps, num_zones, max_zones, n_points ! Added n_points 8/20/2020 RLB
   integer:: ncol,nrow,u(ulen)
@@ -92,7 +92,7 @@ program regolith
   real::dzdxgs_max,dzdygs_max,power
   real(kind = 8)::pi,param(6),parami(6),ti,dg2rad
   real(kind = 8):: noDataDouble
-  real (kind = 8):: nodat,celsiz
+  real (kind = 8):: nodat,celsiz, chek_nodat
   logical::lpvc,ans,lasc,lnfil 
   logical:: topoSmooth,soilSmooth,hump_prod_any,l_deriv, l_test
   logical, allocatable:: hump_prod(:) 
@@ -119,7 +119,7 @@ program regolith
   pid=(/'TI','GM','TR','RG'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02l'; bldate='24 Nov 2020'
+  vrsn='0.3.02n'; bldate='01 Dec 2020'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -203,6 +203,13 @@ program regolith
   inquire(file=elevfil,exist=lnfil)
   write(*,*) 'Status of elevfil:', lnfil, trim(elevfil)
   if(lnfil) then
+    call ssizgrd(chek_row,chek_col,chek_celsiz,chek_nodat,chek_imax,u(12),infil,header,u(1))
+    if(chek_row/=row .or. chek_col/=col .or. chek_imax/=imax) then
+      write(u(1),*) 'Grid-size parameters do not match'
+      write(*,*) 'Grid-size parameters do not match'
+      close(u(1))
+      stop 'Delete Grid-size file (__grid_size.txt) and restart program.'
+    end if
     call srdgrd(grd,col,ncol,nrow,celsiz,nodat,&
      &    elev,pf1,sctr,imax,temp,u(4),elevfil,param,header,u(1))
     write(u(1),*) 'Elevation grid'
@@ -279,26 +286,35 @@ program regolith
     write(u(1),*) trim(slopefil),sctr,' data cells'
     if(sctr/=imax .or. ncol/=col .or. nrow/=row) then
       write(*,*) 'Grid mismatch: ', trim(slopefil)
-      write(*,*) 'Check slope grid and (or) initialization file against elevation grid.'
+      write(*,*) 'Check slope grid against elevation grid and restart program.'
       write(u(1),*) 'Grid mismatch: ', trim(slopefil)
-      write(u(1),*) 'Check slope grid and (or) initialization file against elevation grid.'
+      write(u(1),*) 'Check slope grid against elevation grid and restart program.'
+      close(u(1))
+      stop 'regolith_main, line 293'
     end if
     slope_rad=slope*dg2rad ! convert slope angles to radians
   endif   
 !  read flow-accumulation grid (upslope contributing area per unit grid cell)
   inquire(file=flo_accfil,exist=lnfil)
-  write(*,*) 'Status of flo_accfil:', lnfil, trim(flo_accfil)
+  write(*,*) 'Status of flo_accfil: ', lnfil, ' ', trim(flo_accfil)
   if(lnfil) then
     call srdgrd(grd,col,ncol,nrow,celsiz,nodat,&
     & contrib_area,pf1,sctr,imax,temp,u(6),flo_accfil,param,header,u(1))
     write(u(1),*) 'Flow accumulation grid'
     write(u(1),*) trim(flo_accfil),sctr,' data cells'
-    if(sctr/=imx1) write (u(1),*) 'Grid mismatch ',trim(flo_accfil)
+    if(sctr/=imax .or. ncol/=col .or. nrow/=row) then
+      write(*,*) 'Grid mismatch: ', trim(flo_accfil)
+      write(*,*) 'Check flow accumulation grid against elevation grid and restart program.'
+      write(u(1),*) 'Grid mismatch: ', trim(flo_accfil)
+      write(u(1),*) 'Check flow accumulation  grid against elevation grid and restart program.'
+      close(u(1))
+      stop 'regolith_main, line 311'
+    end if
     chan_thresh=chan_thresh/(celsiz*celsiz) ! normalize by grid cell area.
   else
-    write(u(1),*) 'Flow accumulation grid does not exist'
+    write(u(1),*) 'Flow accumulation grid does not exist.'
     write(u(1),*) 'Edit rg_in.txt and restart program'
-    write(*,*) 'Flow accumulation grid does not exist'
+    write(*,*) 'Flow accumulation grid does not exist.'
     close(u(1))
     stop 'Edit rg_in.txt and restart program'
   end if
