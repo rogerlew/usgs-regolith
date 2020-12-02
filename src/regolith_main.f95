@@ -119,7 +119,7 @@ program regolith
   pid=(/'TI','GM','TR','RG'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02n'; bldate='01 Dec 2020'
+  vrsn='0.3.02o'; bldate='02 Dec 2020'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -150,16 +150,26 @@ program regolith
     read (u(3),*) imax,row,col,nwf
     close (u(3))
   else ! read grid size data from elevation grid and create grid size file
+    write(*,*) 'Obtaining grid-size parameters from elevation grid' 
     infil=elevfil; infil=adjustl(infil)
-    call ssizgrd(row,col,celsiz,nodat,imax,u(12),infil,header,u(1))
-    outfil=trim(elfoldr)//pid(3)//'grid_size.txt'
-    outfil=adjustl(outfil)
-    open (u(3),file=trim(outfil),status='unknown',err=410)
-    write (u(3),*) 'imax      row      col      nwf'
-    nwf=1 ! dsctr is computed by TopoIndex; dsctr=1 is default value for no runoff routing.
-    write (u(3),*) imax,row,col,nwf
-    write (u(3),*) ''
-    close (u(3))
+    inquire(file=infil,exist=lnfil)
+    write(*,*) 'Status of elevfil:', lnfil, trim(elevfil)
+    if(lnfil) then
+      call ssizgrd(row,col,celsiz,nodat,imax,u(12),infil,header,u(1))
+      outfil=trim(elfoldr)//pid(3)//'grid_size.txt'
+      outfil=adjustl(outfil)
+      open (u(3),file=trim(outfil),status='unknown',err=410)
+      write (u(3),*) 'imax      row      col      nwf'
+      nwf=1 ! dsctr is computed by TopoIndex; dsctr=1 is default value for no runoff routing.
+      write (u(3),*) imax,row,col,nwf
+      write (u(3),*) ''
+      close (u(3))
+    else
+      write(u(1),*) 'Elevation grid does not exist'
+      write(*,*) 'Elevation grid does not exist'
+      close(u(1))
+      stop 'Edit rg_in.txt and restart program'
+    endif
   end if
   write(u(1),*) 'Grid size parameters from ', trim(infil)
   write (u(1),*) trim(adjustl(size_heading))
@@ -203,7 +213,7 @@ program regolith
   inquire(file=elevfil,exist=lnfil)
   write(*,*) 'Status of elevfil:', lnfil, trim(elevfil)
   if(lnfil) then
-    call ssizgrd(chek_row,chek_col,chek_celsiz,chek_nodat,chek_imax,u(12),infil,header,u(1))
+    call ssizgrd(chek_row,chek_col,chek_celsiz,chek_nodat,chek_imax,u(12),elevfil,header,u(1))
     if(chek_row/=row .or. chek_col/=col .or. chek_imax/=imax) then
       write(u(1),*) 'Grid-size parameters do not match'
       write(*,*) 'Grid-size parameters do not match'
@@ -364,6 +374,7 @@ program regolith
   if(num_zones > 1)then
     ans=.false.
     inquire (file=trim(zonfil),exist=ans)
+    write(*,*) 'Status of zonfil:', ans, trim(zonfil)
     if(ans) then
       call irdgrd(grd,col,ncol,nrow,celsiz,nodata,mnd,&
              &   zo,pf2,sctr,imax,itemp,u(11),zonfil,parami,header,u(1))
