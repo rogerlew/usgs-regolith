@@ -1,6 +1,6 @@
 ! Procedure to compute soil depth based on NDSD transport model (Pelletier & Rasmussen, 2009)
 ! 25 May 2017, RLB, Latest revision 13 Aug 2020 (removed nds2_depth)
-  subroutine ndsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cell_row,cell_column,&
+  subroutine ndsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cell_row,cell_column,&
      & indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,dzdygs,del2gs,&
      & nl_slope_fac,sec_delta,soil_depth,num_steps,chan_thresh,chan_depth,&
      & contrib_area,sc_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
@@ -16,7 +16,7 @@
   real::h1,hmin,lhs,rhs,soil_depth_min,soil_depth_max,num_steps_flt 
   logical edge(4)
 ! FORMAL ARGUMENTS 
-  integer,intent(in)::ulog,imax,ncol,nrow,grd,nodata,cell_row(imax),cell_column(imax)
+  integer,intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cell_row(imax),cell_column(imax)
   integer,intent(in)::indexed_cell_number(imax),elev_index_lkup(imax),cta(ncol,nrow)
   integer,intent(in)::num_steps,max_zones,zo(imax)
 	real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis
@@ -37,8 +37,8 @@
     trans_x(i)=abs(dzdxgs(i))/nl_slope_fac(i) ! x-component of transport factor
     trans_y(i)=abs(dzdygs(i))/nl_slope_fac(i) ! y-component of transport factor
   end do
-  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,nodata)
-  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,nodata)
+  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,no_data_int)
+  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,no_data_int)
   write(*,*) 'd_trans_x_dx max, min', maxval(d_trans_x_dx), minval(d_trans_x_dx)
   write(*,*) 'd_trans_y_dy max, min', maxval(d_trans_y_dy), minval(d_trans_y_dy)
   num_steps_flt=float(num_steps)

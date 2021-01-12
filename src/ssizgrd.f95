@@ -65,6 +65,7 @@ subroutine ssizgrd(row,col,celsiz,nodat,ctr,u,infil,header,ulog)
   125  close(u)
     write(*,*) ctr,' = number of data cells'
     write(*,*) ctall,' = total number of cells'
+  deallocate(temp)
   return
   23  continue
     write (*,*) '*** Error opening input file in subroutine ssizgrd ***'
@@ -77,6 +78,6 @@ subroutine ssizgrd(row,col,celsiz,nodat,ctr,u,infil,header,ulog)
     read*
     close(u)
     close(ulog)
-    stop '- Error in ssizgrd()'
+    stop '- Error in ssizgrd(), line 18'
 end subroutine ssizgrd
   

@@ -1,6 +1,6 @@
 ! procedure to compute soil depth based on NSD-A transport model
 ! 3 Feb 2015, RLB, Latest revision 13 Aug 2020, RLB.
-subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thresh,&
+subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_thresh,&
   & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
   & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
   & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
@@ -9,7 +9,7 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thre
   integer::i
   real ::trans_nsd,aexpn,soil_depth_min,soil_depth_max,h1 
 ! FORMAL ARGUMENTS
-  integer, intent(in)::ulog,imax,ncol,nrow,grd,nodata,cta(ncol,nrow),max_zones,zo(imax)
+  integer, intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cta(ncol,nrow),max_zones,zo(imax)
 	real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis,power
 	real, intent(in):: depth_max(max_zones),depth_min(max_zones),sc_rad(max_zones)
   real, intent(in)::chan_thresh,chan_depth,pf1(grd),contrib_area(imax)
@@ -25,8 +25,8 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thre
     trans_x(i)=dzdxgs(i)/nl_slope_fac(i) ! x-component of transport factor
     trans_y(i)=dzdygs(i)/nl_slope_fac(i) ! y-component of transport factor
   end do
-  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,nodata)
-  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,nodata)
+  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,no_data_int)
+  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,no_data_int)
   if(l_test) then ! Test mode to compare against analytical solutions
     do i=1,imax
       trans_nsd=d_trans_x_dx(i)+d_trans_y_dy(i)

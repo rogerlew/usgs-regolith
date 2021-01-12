@@ -1,6 +1,6 @@
 ! procedure to compute soil depth based on NASD transport model
 ! 3 Feb 2015, RLB, Latest revision 13 Aug 2020.
-subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thresh,&
+subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_thresh,&
   & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
   & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
   & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
@@ -10,7 +10,7 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thres
   real::h1,soil_depth_min,soil_depth_max
   real::trans_nasd,aexpn
 ! FORMAL ARGUMENTS
-  integer, intent(in)::ulog,imax,ncol,nrow,grd,nodata,cta(ncol,nrow),max_zones,zo(imax)
+  integer, intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cta(ncol,nrow),max_zones,zo(imax)
 	real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis
 	real, intent(in):: depth_max(max_zones),depth_min(max_zones),sc_rad(max_zones)
   real, intent(in):: chan_thresh,chan_depth,pf1(grd),contrib_area(imax),power
@@ -36,8 +36,8 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thres
     trans_y(i)=aexpn*dzdygs(i)/nl_slope_fac(i) ! y-component of transport factor
     ctr1=ctr1+1
   end do
-  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,nodata)
-  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,nodata)
+  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,no_data_int)
+  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,no_data_int)
   ctr=0;neg_ctr=0;cycl_ctr=0
   if(l_test) then  ! Test mode to compare against analytical solutions
     do i=1,imax

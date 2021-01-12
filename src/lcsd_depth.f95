@@ -1,6 +1,6 @@
 ! procedure to compute soil depth based on LCSD transport model
 ! 21Aug 2019, RLB, Latest revision 13 Aug 2020, RLB.
-subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thresh,&
+subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_thresh,&
   & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,slope_rad,&
   & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
   & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test)
@@ -10,7 +10,7 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thres
   real ::trans_lcsd,soil_depth_min,soil_depth_max 
   real::h1 
 ! FORMAL ARGUMENTS
-  integer, intent(in)::ulog,imax,ncol,nrow,grd,nodata,cta(ncol,nrow),max_zones,zo(imax)
+  integer, intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cta(ncol,nrow),max_zones,zo(imax)
 	real, intent(in):: h0(max_zones),dif_ratio(max_zones)
   real, intent(in):: depth_max(max_zones),depth_min(max_zones),tis
   real, intent(in)::chan_thresh,chan_depth,sc_rad(max_zones),pf1(grd),contrib_area(imax)
@@ -41,8 +41,8 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,nodata,cta,chan_thres
       if(soil_depth(i)>depth_max(zo(i)) ) soil_depth(i)=depth_max(zo(i))
     end do
   else  ! Production mode
-    call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,nodata)
-    call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,nodata)
+    call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,no_data_int)
+    call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,no_data_int)
     do i=1,imax
       trans_lcsd=d_trans_x_dx(i)+d_trans_y_dy(i)
       if (trans_lcsd < 0.) trans_lcsd=-trans_lcsd ! 3/4/2019 RLB

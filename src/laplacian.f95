@@ -1,4 +1,4 @@
-subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null,nodati)
+subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null,no_data_int)
 ! Compute 2nd derivatives and laplacian of digital elevation grids 
 ! Rex L. Baum, USGS, May 26, 2017, Latest revision 23 Nov 2020.
   implicit none
@@ -8,7 +8,7 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
   integer:: i,j,xedge,yedge
 !
 ! FORMAL ARGUMENTS
-  integer, intent(in):: col,row,nodati,imax,cta(col,row) 
+  integer, intent(in):: col,row,no_data_int,imax,cta(col,row) 
   real (kind = 8), intent(in):: null,delx,dely
   real, intent(in):: z(imax),z1(col,row)
   real, intent(out):: d2zdx2(imax),d2zdy2(imax),divgradz(imax) 
@@ -37,11 +37,11 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
 ! 3-point formulas compute derivatives components at edges
 ! Case formulas revised 29 May 2019 to handle narrow rows or columns of cells bounded by null (no-data) cells.
         case(1) ! north edge
-          if(cta(j,i) /= nodati) then
+          if(cta(j,i) /= no_data_int) then
             if(i>=row-1) then
               d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivative
             else
-              if(cta(j,i+1) == nodati .or. cta(j,i+2) == nodati) then
+              if(cta(j,i+1) == no_data_int .or. cta(j,i+2) == no_data_int) then
                 d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivative
                 cycle
               else ! Apply forward-difference formula at edge
@@ -51,11 +51,11 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
             end if
           endif
         case(2) ! south edge
-          if(cta(j,i) /= nodati) then
+          if(cta(j,i) /= no_data_int) then
             if(i<=2) then
               d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
             else
-              if(cta(j,i-1) == nodati .or. cta(j,i-2) == nodati) then
+              if(cta(j,i-1) == no_data_int .or. cta(j,i-2) == no_data_int) then
                 d2zdy2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
               else! Apply backward-difference formula at edge
                 d2zdy2(cta(j,i)) =&
@@ -64,10 +64,10 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
             end if
           endif
         case(5) ! isolated finger, not enough points to compute the 2nd derivatives
-          if(cta(j,i)/=nodati) d2zdy2(cta(j,i)) = 0.
+          if(cta(j,i)/=no_data_int) d2zdy2(cta(j,i)) = 0.
         case default
 ! Central difference formula computes 2nd derivative inside grid
-        if(cta(j,i)/=nodati) d2zdy2(cta(j,i)) =&
+        if(cta(j,i)/=no_data_int) d2zdy2(cta(j,i)) =&
         & (z(cta(j,i-1)) + z(cta(j,i+1)) - 2.d0*z(cta(j,i)))/(dely*dely)
         end select
       end if
@@ -89,11 +89,11 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
 !
         select case (xedge)
         case(3) ! east edge
-          if(cta(j,i) /= nodati) then
+          if(cta(j,i) /= no_data_int) then
             if (j<=2) then
               d2zdx2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
             else
-              if(cta(j-1,i) == nodati .or. cta(j-2,i) == nodati) then
+              if(cta(j-1,i) == no_data_int .or. cta(j-2,i) == no_data_int) then
                 d2zdx2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
               else! Apply backward-difference formula at edge
                 d2zdx2(cta(j,i)) =&
@@ -102,11 +102,11 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
             end if
           endif
         case(4) ! west edge
-          if(cta(j,i) /= nodati) then
+          if(cta(j,i) /= no_data_int) then
             if(j>=col-1)then
               d2zdx2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
             else
-              if(cta(j+1,i) == nodati .or. cta(j+2,i) == nodati) then
+              if(cta(j+1,i) == no_data_int .or. cta(j+2,i) == no_data_int) then
                 d2zdx2(cta(j,i)) = 0. ! not enough points to compute the 2nd derivatives
               else! Apply forward-difference formula at edge
                 d2zdx2(cta(j,i)) =&
@@ -115,15 +115,15 @@ subroutine laplacian(z,z1,cta,imax,col,row,d2zdx2,d2zdy2,divgradz,delx,dely,null
             end if
           endif
         case(6) ! isolated finger, not enough points to compute the 2nd derivatives
-          if(cta(j,i)/=nodati) d2zdx2(cta(j,i)) = 0.
+          if(cta(j,i)/=no_data_int) d2zdx2(cta(j,i)) = 0.
         case default
 ! Central difference formula computes 2nd derivative inside grid
-          if(cta(j,i)/=nodati) d2zdx2(cta(j,i)) =&
+          if(cta(j,i)/=no_data_int) d2zdx2(cta(j,i)) =&
           & (z(cta(j+1,i))+z(cta(j-1,i))-2.d0*z(cta(j,i)))/(delx*delx)
         end select
       end if
 ! Compute Laplacian of z (divergence of gradient of z)   
-      if(cta(j,i)/=nodati) divgradz(cta(j,i))=d2zdx2(cta(j,i))+d2zdy2(cta(j,i))
+      if(cta(j,i)/=no_data_int) divgradz(cta(j,i))=d2zdx2(cta(j,i))+d2zdy2(cta(j,i))
     end do
   end do
   write(*,*) '2nd derivatives completed'

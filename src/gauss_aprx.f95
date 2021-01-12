@@ -2,8 +2,8 @@
 ! Apply filter in y (N-S) and x (E-W) directions separately (see www.dspguide.com/ch24/3.htm)
 ! use mirror-image at boundaries and preserve (skip) no-data cells
 ! Rex L. Baum, USGS, January 2020, Latest revision 27 Jan. 2020.
- subroutine gauss_approx(z0,z1,cta,imax,ncol,nrow,delx,dely,null,&
-                        & nodati,zfiltered,ztemp,temp2,npoints)
+ subroutine gauss_approx(z0,cta,imax,ncol,nrow,delx,dely,null,&
+                        & no_data_int,zfiltered,ztemp,temp2,npoints)
   implicit none
 !
 ! LOCAL VARIABLES
@@ -11,9 +11,9 @@
   real::cellsum,sum1,q
 !
 ! FORMAL ARGUMENTS
-  integer, intent(in):: ncol,nrow,nodati,imax,cta(ncol,nrow),npoints
+  integer, intent(in):: ncol,nrow,no_data_int,imax,cta(ncol,nrow),npoints
   real (kind = 8), intent(in):: null,delx,dely
-  real, intent(in):: z1(ncol,nrow),z0(ncol,nrow)
+  real, intent(in):: z0(ncol,nrow) ! input array
   real:: ztemp(ncol,nrow),temp2(ncol,nrow)
   real, intent(out):: zfiltered(imax) 
 !
@@ -27,7 +27,7 @@
   do i=1,nrow
      do j=1,ncol
 ! skip no-data cells
-      if(cta(j,i)==nodati) then
+      if(cta(j,i)==no_data_int) then
         cycle 
       endif
 !     Moving average in y direction
@@ -38,7 +38,7 @@
 !       Reflect phantom points across edges 
         if (i+k < 1 .or. i+k > nrow) k1 = -k
 !       Skip null (no-data) cells
-        if(cta(j,i+k1) /= nodati) then 
+        if(cta(j,i+k1) /= no_data_int) then 
           sum1 = sum1 + ztemp(j,i+k1)
         else
           cellsum = cellsum - 1.
@@ -54,7 +54,7 @@
   do i=1,nrow
      do j=1,ncol
 ! skip no-data cells
-      if(cta(j,i)==nodati) then
+      if(cta(j,i)==no_data_int) then
         cycle 
       endif
 !     Moving average in x direction
@@ -65,7 +65,7 @@
 !       Reflect phantom points across edges 
         if (j+k < 1 .or. j+k > ncol) k1 = -k
 !       Skip null (no-data) cells
-        if(cta(j+k1,i) /= nodati) then 
+        if(cta(j+k1,i) /= no_data_int) then 
           sum1 = sum1 + ztemp(j+k1,i)
         else
           cellsum = cellsum - 1.

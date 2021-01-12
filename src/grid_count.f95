@@ -1,17 +1,17 @@
 ! procdure to create 2-d array that maps grid cell numbers (1-d array) to i-j (row-column )coordinates
 ! 2 Feb 2015, RLB
-subroutine grid_count(ncol,nrow,imax,nodati,nodat,cell_row,cell_column,cta,pf1)
+subroutine grid_count(ncol,nrow,imax,no_data_int,nodat,cell_row,cell_column,cta,pf1)
   implicit none
 !!  integer,parameter:: double=kind(1d0)
 ! FORMAL ARGUMENTS
-  integer, intent(in)::nrow,ncol,nodati,imax
+  integer, intent(in)::nrow,ncol,no_data_int,imax
   integer, intent(out)::cell_row(imax),cell_column(imax),cta(ncol,nrow)
   real, intent(in):: pf1(nrow*ncol)
   real (kind = 8), intent(in)::nodat
 ! LOCAL VARIABLES        
   integer::i,j,k,ctr
 !
-  cta=nodati
+  cta=no_data_int
   ctr=0
   do i=1,nrow ! i=row number (y-position) 
     do j=1,ncol ! j=column number (x-position)

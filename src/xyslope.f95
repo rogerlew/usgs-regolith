@@ -1,4 +1,4 @@
-subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
+subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,no_data_int)
 ! Compute x and y components of slope for digital elevation grids, 
 ! Rex L. Baum, USGS, August 2011, Latest revision 23 Nov 2020.
   implicit none
@@ -7,7 +7,7 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
   integer:: i,j,xedge,yedge
 !
 ! FORMAL ARGUMENTS
-  integer, intent(in):: ncol,nrow,nodati,imax,cta(ncol,nrow)
+  integer, intent(in):: ncol,nrow,no_data_int,imax,cta(ncol,nrow)
   real (kind = 8), intent(in):: null,delx,dely
   real, intent(in):: z(imax),z1(ncol,nrow) 
   real, intent(inout):: dzdx(imax),dzdy(imax)
@@ -35,17 +35,17 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
 ! 3-point formulas compute slope components at edges
 ! Case formulas revised 5/29/2019 to handle narrow rows/columns of data cells between null cells
         case(1) ! north edge
-          if(cta(j,i)/=nodati) then ! not enough points to compute slope
+          if(cta(j,i)/=no_data_int) then ! not enough points to compute slope
             if(i==nrow) then
               dzdy(cta(j,i)) = 0.
             else 
-              if(cta(j,i+1)==nodati) then ! not enough points to compute slope
+              if(cta(j,i+1)==no_data_int) then ! not enough points to compute slope
                 dzdy(cta(j,i)) = 0.
                cycle
               end if
             end if
             if(i<=nrow-2) then
-              if(cta(j,i+2)==nodati) then ! Use 2-point forward difference formula
+              if(cta(j,i+2)==no_data_int) then ! Use 2-point forward difference formula
                 dzdy(cta(j,i)) = (-z(cta(j,i+1))+z(cta(j,i)))/dely
               else ! Use 3-point forward difference formula
                 dzdy(cta(j,i)) =&
@@ -54,17 +54,17 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
             endif
           endif
         case(2) ! south edge
-          if(cta(j,i)/=nodati) then ! not enough points to compute slope
+          if(cta(j,i)/=no_data_int) then ! not enough points to compute slope
             if(i==1) then
               dzdy(cta(j,i)) = 0.
             else 
-              if(cta(j,i-1)==nodati) then ! not enough points to compute slope
+              if(cta(j,i-1)==no_data_int) then ! not enough points to compute slope
                 dzdy(cta(j,i)) = 0.
                cycle
               end if
             end if
             if(i>2) then
-              if(cta(j,i-2)==nodati) then ! Use 2-point backward difference formula
+              if(cta(j,i-2)==no_data_int) then ! Use 2-point backward difference formula
                 dzdy(cta(j,i)) = (z(cta(j,i-1))-z(cta(j,i)))/dely
               else ! Use 3-point backward difference formula
                 dzdy(cta(j,i)) =&
@@ -73,10 +73,10 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
             endif
           endif
         case(5) ! isolated finger, not enough points to compute slope
-          if(cta(j,i)/=nodati) dzdy(cta(j,i)) = 0.
+          if(cta(j,i)/=no_data_int) dzdy(cta(j,i)) = 0.
         case default
 ! Central difference formula computes slope components inside grid
-          if(cta(j,i)/=nodati) dzdy(cta(j,i)) =&
+          if(cta(j,i)/=no_data_int) dzdy(cta(j,i)) =&
         & (z(cta(j,i-1))-z(cta(j,i+1)))/(2.d0*dely) ! row number, i, increases in negative y-direction.
         end select
       end if
@@ -96,17 +96,17 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
         endif
         select case (xedge)
         case(3) ! east/right edge
-          if(cta(j,i)/=nodati) then
+          if(cta(j,i)/=no_data_int) then
             if(j==1)then ! not enough points to compute slope
               dzdx(cta(j,i)) = 0.
             else
-              if(cta(j-1,i)==nodati) then ! not enough points to compute slope
+              if(cta(j-1,i)==no_data_int) then ! not enough points to compute slope
                 dzdx(cta(j,i)) = 0.
                 cycle
               end if
             end if
             if(j>2) then
-              if(cta(j-2,i)==nodati) then ! Use 2-point backward difference formula
+              if(cta(j-2,i)==no_data_int) then ! Use 2-point backward difference formula
                 dzdx(cta(j,i)) = (z(cta(j,i))-z(cta(j-1,i)))/delx
               else ! Use 3-point backward difference formula
                 dzdx(cta(j,i)) =&
@@ -115,17 +115,17 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
             endif
           endif
         case(4) ! west/left edge
-          if(cta(j,i)/=nodati) then
+          if(cta(j,i)/=no_data_int) then
             if(j==ncol) then ! not enough points to compute slope
               dzdy(cta(j,i)) = 0.
             else 
-              if(cta(j+1,i)==nodati) then ! not enough points to compute slope
+              if(cta(j+1,i)==no_data_int) then ! not enough points to compute slope
                 dzdx(cta(j,i)) = 0.
                 cycle
               end if 
             end if
             if(j<=ncol-2) then
-              if (cta(j+2,i)==nodati) then ! Use 2-point backward difference formula
+              if (cta(j+2,i)==no_data_int) then ! Use 2-point backward difference formula
                 dzdx(cta(j,i)) = (z(cta(j+1,i))-z(cta(j,i)))/delx
               else ! Use 3-point forward difference formula
                 dzdx(cta(j,i)) =&
@@ -134,10 +134,10 @@ subroutine xyslope(z,z1,cta,imax,ncol,nrow,dzdx,dzdy,delx,dely,null,nodati)
             endif
           endif
         case(6) ! isolated finger, not enough points to compute slope
-          if(cta(j,i)/=nodati) dzdx(cta(j,i)) = 0.
+          if(cta(j,i)/=no_data_int) dzdx(cta(j,i)) = 0.
         case default
 ! Central difference formula computes slope components inside grid
-          if(cta(j,i)/=nodati) dzdx(cta(j,i)) =&
+          if(cta(j,i)/=no_data_int) dzdx(cta(j,i)) =&
           & (z(cta(j+1,i))-z(cta(j-1,i)))/(2.d0*delx)
         end select
       end if

@@ -2,10 +2,10 @@ subroutine rgbanner(vrsn,bldate)
   character (len=7):: vrsn
   character (len=11):: bldate
   write (*,*) ''
-  write (*,*) 'Regolith: Estimtate of regolith depth using'
+  write (*,*) 'Regolith: Estimate of regolith depth using'
   write (*,*) '   topographic data and geomorphic models'
   write (*,*) '       Version ', vrsn,', ',bldate
-  write (*,*) '    By Rex L. Baum'
+  write (*,*) '    By Rex L. Baum and Emily C. Bedinger'
   write (*,*) '       U.S. Geological Survey'
   write (*,*) '-----------------------------------------------'
   write (*,*) ''       
