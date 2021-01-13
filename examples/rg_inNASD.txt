@@ -1,0 +1,35 @@
+#Program regolith, v.1.0, to estimate regolith thickness from topography
+North Charlotte Creek
+# Transport model (trans_model) use codes, 'DRS1', 'DRS2', 'DRS3', 'WNDX', 'NSD', 'NASD', 'NSDA', 'LCSD', or 'NDSD'; Test mode?
+NASD, .false.
+# Channel parameters: chan_thresh, chan_depth
+2000000., 0.5
+# Number of soil depth zones, num_zones, max_zones
+1, 1
+# Number of steps for NDSD model, num_steps
+1000
+zone, 1
+# sc, depth_min, depth_max, C0, C1, C2 for empirical models or sc, depth_min, depth_max, h0, dif_ratio, hump_prod for process-based models
+55,	0.1,	5.0,	0.5,	4,   .false.
+# Exponent of DRS2 polynomial, or of upslope area in NASD, NSDA, and WNDX models
+1
+# File name of digital elevation grid (elevfil)
+./input/rastert_times_f1.txt
+# File name of slope grid (slopefil)
+./input/rastert_slope_t1.asc
+# File name of flow-accumulation grid (flo_accfil)
+./input/flowacc_flow1.asc
+# File name of elevation index file (ndxfil)
+./input/TIcelindxGrid_ncc.txt
+# File name of plan-view curvature grid
+./input/pv_curv.asc
+# File name of model-parameter zone grid
+none
+# Folder where output grid files will be stored  (folder)
+./output/
+# Identification code to be added to names of output files (suffix)
+NASD
+# Specify grid file extension? (.asc if true, default is .txt), Output derivatives? 
+.true.,.false.
+# Specify Topographic smoothing and soil smoothing (topoSmooth, soilSmooth), Smoothing window (n_points)
+.false., .false., 5
