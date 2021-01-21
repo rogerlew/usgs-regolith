@@ -9,7 +9,7 @@ NSD, .true.
 # Number of of steps for NDSD model, num_steps
 1000
 zone, 1
-# sc_deg, depth_min, depth_max, h0, dif_ratio, hump_prod
+# sc, depth_min, depth_max, C0, C1, C2 for empirical models or sc, depth_min, depth_max, h0, dif_ratio, hump_prod for process-based models
 71.565051,  -1.0,      100.0,   0.5,   1.0,    .false.
 # Exponent of DRS2 polynomial, or of upslope area in NASD, NSDA, and WNDX models
 1.0
