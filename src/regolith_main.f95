@@ -115,7 +115,7 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02q'; bldate='11 Jan 2021'
+  vrsn='0.3.02r'; bldate='22 Jan 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -157,7 +157,7 @@ program regolith
   nxt=0; dsctr=0; zo=0
   slope=0.; slope_rad=0. 
   temp=0.;itemp=0 
-  soil_depth=0.; zo=1; contrib_area=0; elev=0.;  
+  soil_depth=0.; zo=1; contrib_area=0.; elev=0.;  
   dzdxgs=0.;dzdygs=0.;dipgs=0.;slopgs=0.
 ! Choose file extension for grid files, Added 4/14/2010
   grxt='.txt'
@@ -301,13 +301,20 @@ program regolith
     write(u(1),*) 'Flow accumulation grid'
     write(u(1),*) trim(flo_accfil),sctr,' data cells'
     chan_thresh=chan_thresh/(celsiz*celsiz) ! normalize by grid cell area.
-  else
+! Test for models that require upslope contributing area 
+  elseif (trans_model == 'WNDX' .or. trans_model == 'NASD' .or. trans_model &
+          &== 'NSDA') then 
     write(u(1),*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
     write(u(1),*) 'Edit path name in ', trim(init), ', then restart program.'
     write(*,*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
     write(*,*)  'Edit path name in ', trim(init), ', then restart program.'
     close(u(1))
-    stop 'regolith_main, line 293'
+    stop 'regolith_main, line 304'
+  else ! *** Exception here models that do not require contrbuting area. ***
+    write(u(1),*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
+    write(u(1),*) 'Regolith will compute soil depths without adjusting for channel depth.'
+    write(*,*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
+    write(*,*)  'Regolith will compute soil depths without adjusting for channel depth.'
   end if
 ! read cell number index to determine order of computation for NDSD models
   if(trans_model(1:3) == 'NDS') then
@@ -336,9 +343,9 @@ program regolith
         indexed_cell_number(j1)=i ! elevaton index (highest to lowest) of j1th cell 
       end do
     else
-      write(u(1),*) 'Cell index grid needed by NDSD model ', trim(flo_accfil), ' was not found'
+      write(u(1),*) 'Cell index grid needed by NDSD model ', trim(ndxfil), ' was not found'
       write(u(1),*) 'Edit path name in ', trim(init), ', then restart program.'
-      write(*,*) 'Cell index grid needed by NDSD model ', trim(flo_accfil), ' was not found'
+      write(*,*) 'Cell index grid needed by NDSD model ', trim(ndxfil), ' was not found'
       write(*,*)  'Edit path name in ', trim(init), ', then restart program.'
       close(u(1))
       stop 'regolith_main, line 324'
