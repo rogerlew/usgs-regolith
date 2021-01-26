@@ -4,7 +4,7 @@
 ! Feb 2015, RLB, Latest revision 8 Sep 2020.
 
 ! w0(:) -- inverse of wetness index at minimum depth
-subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,sc_rad,dg2rad,contrib_area,&
+subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contrib_area,&
   & slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power)
   implicit none
 ! LOCAL VARIABLES
@@ -13,7 +13,7 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,sc_rad,dg2rad,contrib_ar
   real(kind = 8)::w0,temp0 
 ! FORMAL ARGUMENTS
   integer, intent(in):: ulog,imax, max_zones,zo(imax)
-	real, intent(in):: depth_min(max_zones),C0(max_zones),sc_rad(max_zones),depth_max(max_zones)
+	real, intent(in):: depth_min(max_zones),C0(max_zones),theta_c_rad(max_zones),depth_max(max_zones)
   real, intent(in):: chan_thresh,chan_depth,contrib_area(imax)
   real, intent(in):: slope_rad(imax),power
   real, intent(inout)::soil_depth(imax)
@@ -34,7 +34,7 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,sc_rad,dg2rad,contrib_ar
         if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
 ! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
         if(contrib_area(i)>chan_thresh) then 
-           if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+           if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
               if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
            end if
         end if
@@ -55,7 +55,7 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,sc_rad,dg2rad,contrib_ar
         if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
 ! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
         if(contrib_area(i)>chan_thresh) then 
-           if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+           if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
               if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
            end if
         end if

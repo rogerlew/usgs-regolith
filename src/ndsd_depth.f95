@@ -2,8 +2,8 @@
 ! 25 May 2017, RLB, Latest revision 13 Aug 2020 (removed nds2_depth)
   subroutine ndsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cell_row,cell_column,&
      & indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,dzdygs,del2gs,&
-     & nl_slope_fac,sec_delta,soil_depth,num_steps,chan_thresh,chan_depth,&
-     & contrib_area,sc_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+     & nl_slope_fac,sec_theta,soil_depth,num_steps,chan_thresh,chan_depth,&
+     & contrib_area,theta_c_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones)
   implicit none
 ! LOCAL VARIABLES
@@ -20,10 +20,10 @@
   integer,intent(in)::indexed_cell_number(imax),elev_index_lkup(imax),cta(ncol,nrow)
   integer,intent(in)::num_steps,max_zones,zo(imax)
 	real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis
-	real, intent(in):: depth_max(max_zones),depth_min(max_zones),sc_rad(max_zones)
+	real, intent(in):: depth_max(max_zones),depth_min(max_zones),theta_c_rad(max_zones)
   real, intent(in)::pf1(grd)
   real, intent(in):: chan_thresh,chan_depth,contrib_area(imax),slope_rad(imax)
-  real, intent(in):: dzdxgs(imax),dzdygs(imax),del2gs(imax),nl_slope_fac(imax),sec_delta(imax)
+  real, intent(in):: dzdxgs(imax),dzdygs(imax),del2gs(imax),nl_slope_fac(imax),sec_theta(imax)
   real, intent(inout)::soil_depth(imax)
   real, intent(inout):: unused(imax)
   real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
@@ -150,9 +150,9 @@
       do l=1,maxd(m)
         h1=float(l)/num_steps_flt
         if (hump_prod(zo(m))) then
-          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_delta(m)))
+          lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_theta(m)))
         else
-          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*exp(-h1/(h0(zo(m))*sec_delta(m)))
+          lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*exp(-h1/(h0(zo(m))*sec_theta(m)))
         end if
         rhs=soil_depth(iup_cn)*trans_x(iup_cn)-h1*trans_x(m)+&
             & soil_depth(jup_cn)*trans_y(jup_cn)-h1*trans_y(m)
@@ -168,9 +168,9 @@
       do l=1,maxd(m)
         h1=float(l)/num_steps_flt
         if (hump_prod(zo(m))) then
-          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_delta(m)))
+          lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_theta(m)))
         else
-          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*exp(-h1/(h0(zo(m))*sec_delta(m)))
+          lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*exp(-h1/(h0(zo(m))*sec_theta(m)))
         end if
 ! Replace iup terms with with x component of Del(Del(z))/nl_slope_fac)
         rhs=h1*d_trans_x_dx(m)+soil_depth(jup_cn)*trans_y(jup_cn)-h1*trans_y(m) 
@@ -186,9 +186,9 @@
       do l=1,maxd(m)
         h1=float(l)/num_steps_flt
         if (hump_prod(zo(m))) then
-          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_delta(m)))
+          lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_theta(m)))
         else
-          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*exp(-h1/(h0(zo(m))*sec_delta(m)))
+          lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*exp(-h1/(h0(zo(m))*sec_theta(m)))
         end if
 ! Replace jup terms with y component of Del(Del(z))/nl_slope_fac)
         rhs=soil_depth(iup_cn)*trans_x(iup_cn)-h1*trans_x(m)+h1*d_trans_y_dy(m) 
@@ -205,9 +205,9 @@
       do l=1,maxd(m)
         h1=float(l)/num_steps_flt
         if (hump_prod(zo(m))) then
-          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_delta(m)))
+          lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*(h1/h0(zo(m)))*exp(-h1/(h0(zo(m))*sec_theta(m)))
         else
-          lhs=-dif_ratio(zo(m))*celsiz*sec_delta(m)*exp(-h1/(h0(zo(m))*sec_delta(m)))
+          lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*exp(-h1/(h0(zo(m))*sec_theta(m)))
         end if
         rhs=h1*Del_dotDelZ_nlso ! Replace iup and jup terms with Del(Del(z))/nl_slope_fac)
         resid=abs(lhs-rhs)
@@ -227,7 +227,7 @@
     if(soil_depth(i)<depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
 ! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
-         if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+         if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
          end if
       end if

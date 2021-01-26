@@ -20,7 +20,9 @@
 ! num_zones -- number of property zones
 ! param(6) parami(6) -- grid parameters (8-byte real) from headings of ascii grid files from floating point and integer grids, respectively
 ! row -- number of rows in ascii grids
-! sc -- angle of stability (degrees)
+! sc -- tangent of angle of stability 
+! theta_c_deg -- angle of stability (degrees)
+! theta_c_rad -- angle of stability (radians)
 ! ti -- the smallest value that can be represented by a double precision variable.
 ! tis -- the smallest value that can be represented by a single precision variable.
 ! trans_model-- sediment transport model (or empirical soil depth model) used
@@ -30,15 +32,15 @@
 ! cell_row(:) -- row number of each grid cell--reference from upper left corner
 ! cell_column(:) -- column number of each grid cell--reference from upper left corner
 ! cn(:,:) -- data cell numbers referenced by grid row and column--reference from lower left corner
-! cos_delta(:) -- cos(delta)=sqrt(1+|Del(z)|^2)
+! cos_theta(:) -- cos(theta)=sqrt(1+|Del(z)|^2)
 ! cta(:,:) -- data cell numbers referenced by grid row and column--reference from upper left corner
 ! del2gs(:) -- laplacian of ground surface
 ! dzdxgs(:) -- slope of ground surface in x coordinate direction
 ! dzdygs(:) -- slope of ground surface in y coordinate direction
 ! d2zdx2gs(:) -- 2nd derivative of ground surface in x corrdinate direction 
 ! d2zdy2gs(:) -- 2nd derivative of ground surface in y corrdinate direction
-! mag_del_z -- magnitude of gradient of z, |Del(z)|, (tan(delta)), where delta is slope angle of ground surface)
-! mag_del_z_sq -- squared magnitude of gradient of z, |Del(z)|^2, (also tan^2(delta))
+! mag_del_z -- magnitude of gradient of z, |Del(z)|, (tan(theta)), where theta is slope angle of ground surface)
+! mag_del_z_sq -- squared magnitude of gradient of z, |Del(z)|^2, (also tan^2(theta))
 ! nl_slope_fac -- 1-(|Del(z)|/Sc)^2, where Sc is the tangent of the "angle of stability"
 ! Del_dotDelZ_nlso(:) -- Divergence of the gradient of z divided by the nonlinear slope factor (nl_slope_fac), Del.(Del z)/nl_slope_fac)  
 ! unused(:) -- placeholder for output not needed in further computations
@@ -51,7 +53,7 @@
 ! pf1 -- grid stored as 1-d array, used to track locations of no-data values
 ! power -- exponent of DRS2 polynomial, or upslope area in NASD, NSDA, and WNDX models
 ! soil_depth -- computed depth of soil, h
-! sec_delta -- 1/cos(slope angle) = sqrt(1+ |Del(z)|^2)
+! sec_theta -- 1/cos(slope angle) = sqrt(1+ |Del(z)|^2)
 ! temp -- temporary array to hold one row (line) of grid data (floating point)
 ! itemp -- temporary array to hold one row (line) of grid data (integer)
 ! trans_x(:) = dzdxgs(i)/nl_slope_fac(i)
@@ -75,11 +77,11 @@ program regolith
   integer, allocatable:: indexed_cell_number(:),elev_index_lkup(:) 
   real:: x1,dipdr,dip,slpdr,chan_thresh,chan_depth, tis 
   real, allocatable:: h0(:),sc(:),dif_ratio(:),depth_max(:),depth_min(:),C0(:),C1(:),C2(:)
-  real, allocatable:: sc_rad(:), sc_deg(:)
+  real, allocatable:: theta_c_rad(:), theta_c_deg(:)
   real, allocatable:: elev(:),slope(:),soil_depth(:) 
   real, allocatable:: plan_view_curv(:),tfg(:),temp(:),pf1(:)
   real, allocatable:: dzdxgs(:),dzdygs(:),d2zdx2gs(:),d2zdy2gs(:),del2gs(:) 
-  real, allocatable:: mag_del_z(:), mag_del_z_sq(:),sec_delta(:),nl_slope_fac(:),slope_rad(:)
+  real, allocatable:: mag_del_z(:), mag_del_z_sq(:),sec_theta(:),nl_slope_fac(:),slope_rad(:)
   real, allocatable:: slopgs(:),dipgs(:),contrib_area(:)
   real, allocatable:: unused(:),filtered(:),elev0(:,:),depth0(:,:),temp1(:,:),temp2(:,:)
   real, allocatable:: trans_x(:),trans_y(:),d_trans_x_dx(:),d_trans_y_dy(:)
@@ -115,19 +117,19 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02r'; bldate='22 Jan 2021'
+  vrsn='0.3.02s'; bldate='25 Jan 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
 !  read initialization file
 !! ********** Change zoned input parameters from dif_ratio to dif_ratio_list, etc *****************
   call regolini(u(1),u(2),init,dg2rad,trans_model,chan_thresh,chan_depth,&
-     & num_zones,max_zones,num_steps,hump_prod,sc_deg,suffix,folder,&
+     & num_zones,max_zones,num_steps,hump_prod,theta_c_deg,suffix,folder,&
      & elevfil,slopefil,flo_accfil,pv_curvfil,ndxfil,zonfil,heading,lasc,&
      & h0,sc,dif_ratio,depth_max,depth_min,C0,C1,C2,zon,vrsn,bldate,date,time,&
      & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_test,power)
-  allocate(sc_rad(max_zones))
-  sc_rad=sc_deg*dg2rad
+  allocate(theta_c_rad(max_zones))
+  theta_c_rad=theta_c_deg*dg2rad
 ! determine grid size parameters RLB 4/18/2011
   call grid_size(elevfil,elfoldr,init, imax,row,col,nwf,u(1),u(3),u(12),&
    & celsiz,no_data_64)
@@ -423,10 +425,10 @@ program regolith
   end if
 ! compute gradients and related quantities
   if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then 
-    allocate(mag_del_z(imax), mag_del_z_sq(imax),sec_delta(imax),nl_slope_fac(imax))
+    allocate(mag_del_z(imax), mag_del_z_sq(imax),sec_theta(imax),nl_slope_fac(imax))
     allocate(unused(imax))
     allocate(trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax))
-    mag_del_z=0.;mag_del_z_sq=0.;sec_delta=0.;nl_slope_fac=0.
+    mag_del_z=0.;mag_del_z_sq=0.;sec_theta=0.;nl_slope_fac=0.
     trans_x=0.;trans_y=0.;d_trans_x_dx=0.;d_trans_y_dy=0.;unused=0.
 ! compute east-west and north-south slope gradients
     if(dzdxgs_max*dzdygs_max==0.)then
@@ -434,29 +436,29 @@ program regolith
       call xyslope(elev,pf1,cta,imax,ncol,nrow,dzdxgs,dzdygs,celsiz,celsiz,no_data_64,no_data_int)
     endif 
 ! compute magnitude and squared magnitude of elevation gradient vector, Del z,
-! non-linear slope factor, 1 - (|Del (z)|/Sc)^2, and 1/cos(delta), where delta is the slope angle of the ground surface
+! non-linear slope factor, 1 - (|Del (z)|/Sc)^2, and 1/cos(theta), where theta is the slope angle of the ground surface
     write(*,*) 'Computing magnitude and related quantities for elevation gradients'
     do i=1,imax
       mag_del_z_sq(i)=dzdxgs(i)*dzdxgs(i)+dzdygs(i)*dzdygs(i)
       mag_del_z(i)=sqrt(mag_del_z_sq(i))
       nl_slope_fac(i)=1.d0-mag_del_z_sq(i)/(sc(zo(i))*sc(zo(i)))
-      sec_delta(i)=sqrt(1+mag_del_z_sq(i))
+      sec_theta(i)=sqrt(1+mag_del_z_sq(i))
     end do    
     tis=tiny(x1)
   end if
 ! compute soil_depth according to different soil-depth models
   write(*,*) 'Selecting depth model'
   select case(trans_model)
-    case('DRS1'); call derose(u(1),imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
+    case('DRS1'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
       & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,depth_max,&
       & depth_min,C0,C1,C2,zo,max_zones,power) ! DeRose exponential formula 
-    case('DRS2'); call derose(u(1),imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
+    case('DRS2'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
       & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,depth_max,&
       & depth_min,C0,C1,C2,zo,max_zones,power) ! DeRose polynomial formula 
-    case('DRS3'); call derose(u(1),imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
+    case('DRS3'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
       & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,depth_max,&
       & depth_min,C0,C1,C2,zo,max_zones,power) ! DeRose exponential formula with curvature 
-    case('WNDX'); call wetness_ndx(u(1),imax,chan_thresh,chan_depth,sc_rad,dg2rad,&
+    case('WNDX'); call wetness_ndx(u(1),imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,&
       & contrib_area,slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power) ! Modified wetness index 
     case('LCSD') ! Classic curvature-based formula
       if (l_deriv .or. l_test) then
@@ -467,25 +469,25 @@ program regolith
       end if
       if(l_test) then ! Pass 2nd derivatives from laplacian subroutine.
         call lcsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
-        & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,slope_rad,&
+        & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,slope_rad,&
         & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
         & unused,trans_x,trans_y,d2zdx2gs,d2zdy2gs,zo,max_zones,l_test)
       else ! Compute 2nd derivatives from 1st derivatives for greater smoothing.
         call lcsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
-        & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,slope_rad,&
+        & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,slope_rad,&
         & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
         & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test)
       endif
     case('NSD');  call nsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
-      & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
+      & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
       & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test)
     case('NSDA'); call nsd_a_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
-      & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
+      & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
       & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
     case('NASD'); call nasd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
-      & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
+      & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
       & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
     case('NDSD') 
@@ -495,8 +497,8 @@ program regolith
          & celsiz,celsiz,no_data_64,no_data_int)
       call ndsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cell_row,cell_column,&
          & indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,dzdygs,del2gs,&
-         & nl_slope_fac,sec_delta,soil_depth,num_steps,chan_thresh,chan_depth,&
-         & contrib_area,sc_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
+         & nl_slope_fac,sec_theta,soil_depth,num_steps,chan_thresh,chan_depth,&
+         & contrib_area,theta_c_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
          & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones)
     case default
       write(*,*) ''
@@ -615,13 +617,13 @@ program regolith
       call ssvgrd(mag_del_z_sq,imax,pf1,row,col,u(22),no_data_32,param,u(1),&
        & outfil,ti,header)    
     end if
-  ! save sec_delta   
+  ! save sec_theta   
     if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then
-      scratch='RG_sec_delta_'
+      scratch='RG_sec_theta_'
       scratch=adjustl(scratch)
       if(soilSmooth) scratch=trim(scratch)//'smo_'
       outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
-      call ssvgrd(sec_delta,imax,pf1,row,col,u(23),no_data_32,param,u(1),&
+      call ssvgrd(sec_theta,imax,pf1,row,col,u(23),no_data_32,param,u(1),&
        & outfil,ti,header)    
     end if
   ! save nl_slope_fac   

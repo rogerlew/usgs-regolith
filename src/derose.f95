@@ -2,7 +2,7 @@
 ! with modifications to allow for slope curvature and a minimum depth.
 ! Both polynomial and exponential forms supported.
 ! 2017, RLB, Latest revision 10 Apr 2019.
-subroutine derose(ulog,imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
+subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
   & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,&
   & depth_max,depth_min,C0,C1,C2,zo,max_zones,power)
   implicit none
@@ -15,7 +15,7 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
   integer, intent(in):: ulog,imax,max_zones,zo(imax)
 	real, intent(in):: C1(max_zones),depth_max(max_zones),depth_min(max_zones)
 	real, intent(in):: C0(max_zones),power, C2(max_zones)
-  real, intent(in):: chan_thresh,chan_depth,sc_rad(max_zones)
+  real, intent(in):: chan_thresh,chan_depth,theta_c_rad(max_zones)
   real, intent(in):: slope(imax),slope_rad(imax),contrib_area(imax),plan_view_curv(imax)
   real, intent(inout):: soil_depth(imax)
   real(kind = 8),intent(in)::dg2rad
@@ -40,11 +40,11 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
       else
         soil_depth(i)=depth_min(zo(i))
       end if
-      if(slope_rad(i)>sc_rad(zo(i))) soil_depth(i)=0.
+      if(slope_rad(i)>theta_c_rad(zo(i))) soil_depth(i)=0.
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
 ! Compare slope angle in channels with 0.2*critical slope angle and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
-         if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+         if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
          end if
       end if
@@ -63,13 +63,13 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
       else
         soil_depth(i)=depth_min(zo(i))
       end if
-      if(slope_rad(i)>sc_rad(zo(i))) soil_depth(i)=0.
+      if(slope_rad(i)>theta_c_rad(zo(i))) soil_depth(i)=0.
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
 !!      write(*,*) i,soil_depth(i), depth_max(zo(i)), C0(zo(i)), plan_view_curv(i), &
 !!        & exp(-C1(zo(i))*slope(i)), C1(zo(i)), slope(i)
 ! Compare slope angle in channels with 0.2*critical slope angle and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
-         if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+         if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
          end if
       end if
@@ -90,11 +90,11 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,sc_rad,slope,slope_rad,&
         soil_depth(i)=depth_min(zo(i))
 !!        write(*,*) '-', soil_depth(i)
       end if
-      if(slope_rad(i) > sc_rad(zo(i))) soil_depth(i)=0.
-!!      write (*,*) slope_rad(i), sc_rad(zo(i)), soil_depth(i)
+      if(slope_rad(i) > theta_c_rad(zo(i))) soil_depth(i)=0.
+!!      write (*,*) slope_rad(i), theta_c_rad(zo(i)), soil_depth(i)
 ! Compare slope angle in channels with 0.2*critical slope angle and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
-         if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+         if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
          end if
       end if

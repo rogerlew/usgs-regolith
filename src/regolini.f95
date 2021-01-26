@@ -5,7 +5,7 @@ contains
 
 ! reads regolith initialization file and starts log file, R.L. Baum, USGS  
   subroutine regolini(ulog,uini,init,dg2rad,trans_model,chan_thresh,chan_depth,&
-        & num_zones,max_zones,num_steps,hump_prod,sc_deg,suffix,folder,&
+        & num_zones,max_zones,num_steps,hump_prod,theta_c_deg,suffix,folder,&
         & elevfil,slopefil,flo_accfil,pv_curvfil,ndxfil,zonfil,heading,lasc,&
         & h0,sc,dif_ratio,depth_max,depth_min,C0,C1,C2,zon,vrsn,bldate,date,time,&
         & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_test,power)
@@ -21,7 +21,7 @@ contains
   integer, intent(in):: ulog,uini
   integer, intent(out)::num_steps, max_zones, num_zones, n_points
   integer, allocatable, intent(out):: zon(:)
-  real, allocatable, intent(out):: sc_deg(:),h0(:),sc(:),dif_ratio(:)
+  real, allocatable, intent(out):: theta_c_deg(:),h0(:),sc(:),dif_ratio(:)
   real, allocatable, intent(out):: depth_max(:),depth_min(:),C0(:),C1(:),C2(:)
   real, intent(out):: chan_thresh,chan_depth,power ! threshold upslope contributing area for channels
   real(kind = 8),intent(in)::dg2rad
@@ -147,10 +147,10 @@ contains
     end if
 ! Allocate and initialize soil zone parameters
     allocate(depth_max(max_zones), depth_min(max_zones), zon(max_zones))
-    allocate(sc_deg(max_zones), sc(max_zones))
+    allocate(theta_c_deg(max_zones), sc(max_zones))
     allocate(C0(max_zones), C1(max_zones), C2(max_zones))
     allocate(h0(max_zones), dif_ratio(max_zones), hump_prod(max_zones))
-    h0=0.; sc_deg=0.; sc=0.; dif_ratio=0.; 
+    h0=0.; theta_c_deg=0.; sc=0.; dif_ratio=0.; 
     depth_max=0.; depth_min=0.; C0=0.; C1=0.; C2=0.
     hump_prod=.false.; zon=0
 ! Soil depth zone parameters
@@ -170,10 +170,10 @@ contains
     endif 
     linct=linct+1
     read (uini,'(a)',err=202) heading(6); linct=linct+1
-    read (uini,*,err=202) sc_deg(iz), depth_min(iz), depth_max(iz),&
+    read (uini,*,err=202) theta_c_deg(iz), depth_min(iz), depth_max(iz),&
         & C0(iz), C1(iz), C2(iz)
 !    Test input parameters
-    if(sc_deg(iz) < 0. .or. sc_deg(iz) > 90.)then
+    if(theta_c_deg(iz) < 0. .or. theta_c_deg(iz) > 90.)then
       out_of_range = .true.
       write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
       msg(2)='Critical slope angle, Sc, out of range at line '//trim(lin_num)//' of '//trim(init)
@@ -209,7 +209,7 @@ contains
       stop 'regolini.f95, line 159'
     end if
     linct=linct+1
-    sc(iz)=tan(sc_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
+    sc(iz)=tan(theta_c_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
   end do
   case('PROC')
   do i=1,num_zones
@@ -225,10 +225,10 @@ contains
     endif 
     linct=linct+1
     read (uini,'(a)',err=202) heading(7); linct=linct+1
-    read (uini,*,err=202) sc_deg(iz), depth_min(iz), depth_max(iz),&
+    read (uini,*,err=202) theta_c_deg(iz), depth_min(iz), depth_max(iz),&
         & h0(iz), dif_ratio(iz), hump_prod(iz) 
 !    Test input parameters
-    if(sc_deg(iz) < 0. .or. sc_deg(iz) > 90.)then
+    if(theta_c_deg(iz) < 0. .or. theta_c_deg(iz) > 90.)then
       out_of_range = .true.
       write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
       msg(2)='Critical slope angle, Sc, out of range at line '//trim(lin_num)//' of '//trim(init)
@@ -274,7 +274,7 @@ contains
       stop 'regolini.f95, line 214'
     end if
     linct=linct+1
-    sc(iz)=tan(sc_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
+    sc(iz)=tan(theta_c_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
   end do
   case default ! undefined model type
     write(*,*) 'Model type is undefined.'
@@ -375,7 +375,7 @@ contains
     do i=1,num_zones
       write (ulog,*) trim(scratch),': ',zon(i)
       write (ulog,*) trim(heading(6))
-      write (ulog,*) sc_deg(zon(i)), depth_min(zon(i)), depth_max(zon(i)),&
+      write (ulog,*) theta_c_deg(zon(i)), depth_min(zon(i)), depth_max(zon(i)),&
         & C0(zon(i)), C1(zon(i)), C2(zon(i))
     end do
   case('PROC')
@@ -383,7 +383,7 @@ contains
     do i=1,num_zones
       write (ulog,*) trim(scratch),': ',zon(i)
       write (ulog,*) trim(heading(7))
-      write (ulog,*) sc_deg(zon(i)), depth_min(zon(i)), depth_max(zon(i)),&
+      write (ulog,*) theta_c_deg(zon(i)), depth_min(zon(i)), depth_max(zon(i)),&
         & h0(zon(i)), dif_ratio(zon(i)), hump_prod(zon(i))
     end do
   case default

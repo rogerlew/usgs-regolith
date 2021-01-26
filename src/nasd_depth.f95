@@ -1,7 +1,7 @@
 ! procedure to compute soil depth based on NASD transport model
 ! 3 Feb 2015, RLB, Latest revision 13 Aug 2020.
 subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_thresh,&
-  & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,nl_slope_fac,slope_rad,&
+  & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
   & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
   & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
   implicit none
@@ -12,9 +12,9 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
 ! FORMAL ARGUMENTS
   integer, intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cta(ncol,nrow),max_zones,zo(imax)
 	real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis
-	real, intent(in):: depth_max(max_zones),depth_min(max_zones),sc_rad(max_zones)
+	real, intent(in):: depth_max(max_zones),depth_min(max_zones),theta_c_rad(max_zones)
   real, intent(in):: chan_thresh,chan_depth,pf1(grd),contrib_area(imax),power
-  real, intent(in):: dzdxgs(imax),dzdygs(imax),sec_delta(imax),nl_slope_fac(imax),slope_rad(imax)
+  real, intent(in):: dzdxgs(imax),dzdygs(imax),sec_theta(imax),nl_slope_fac(imax),slope_rad(imax)
   real, intent(inout)::soil_depth(imax)
   real, intent(inout):: unused(imax)
   real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
@@ -47,11 +47,11 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       if (abs(trans_nasd) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       cycl_ctr=cycl_ctr+1
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_delta(i)*log(-(dif_ratio(zo(i))*sec_delta(i))/trans_nasd) ! For testing, 8/4/2020
-        call h_solve(sec_delta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_test)
+        h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nasd) ! For testing, 8/4/2020
+        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_test)
       else
-      ! h = h0*sec_delta*Log(-dif_ratio*sec_delta/(area*divgradz/nl_slope_fac)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_delta(i)*log(-(dif_ratio(zo(i))*sec_delta(i))/trans_nasd) ! For testing, 8/4/2020
+      ! h = h0*sec_theta*Log(-dif_ratio*sec_theta/(area*divgradz/nl_slope_fac)) From Pelletier & Rasmussen (2009)
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nasd) ! For testing, 8/4/2020
       endif
       ctr=ctr+1
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
@@ -69,11 +69,11 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       if (trans_nasd<=tis) cycle ! 3/4/2019 RLB
       cycl_ctr=cycl_ctr+1
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_delta(i)*log(trans_nasd/(dif_ratio(zo(i))*sec_delta(i)))
-        call h_solve(sec_delta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_test)
+        h1=h0(zo(i))*sec_theta(i)*log(trans_nasd/(dif_ratio(zo(i))*sec_theta(i)))
+        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_test)
       else
-     ! h = h0*sec_delta*Log((area*divgradz/nl_slope_fac)/(dif_ratio*sec_delta)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_delta(i)*log(trans_nasd/(dif_ratio(zo(i))*sec_delta(i)))
+     ! h = h0*sec_theta*Log((area*divgradz/nl_slope_fac)/(dif_ratio*sec_theta)) From Pelletier & Rasmussen (2009)
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_nasd/(dif_ratio(zo(i))*sec_theta(i)))
       end if
       ctr=ctr+1
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
@@ -83,7 +83,7 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       end if
 ! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
-         if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+         if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
          end if
       end if

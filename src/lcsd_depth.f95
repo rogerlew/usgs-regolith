@@ -1,7 +1,7 @@
 ! procedure to compute soil depth based on LCSD transport model
 ! 21Aug 2019, RLB, Latest revision 13 Aug 2020, RLB.
 subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_thresh,&
-  & chan_depth,sc_rad,pf1,dzdxgs,dzdygs,sec_delta,slope_rad,&
+  & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,slope_rad,&
   & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
   & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test)
   implicit none
@@ -13,8 +13,8 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
   integer, intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cta(ncol,nrow),max_zones,zo(imax)
 	real, intent(in):: h0(max_zones),dif_ratio(max_zones)
   real, intent(in):: depth_max(max_zones),depth_min(max_zones),tis
-  real, intent(in)::chan_thresh,chan_depth,sc_rad(max_zones),pf1(grd),contrib_area(imax)
-  real, intent(in):: dzdxgs(imax),dzdygs(imax),sec_delta(imax),slope_rad(imax)
+  real, intent(in)::chan_thresh,chan_depth,theta_c_rad(max_zones),pf1(grd),contrib_area(imax)
+  real, intent(in):: dzdxgs(imax),dzdygs(imax),sec_theta(imax),slope_rad(imax)
   real, intent(inout)::soil_depth(imax)
   real, intent(inout)::unused(imax)
   real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
@@ -31,11 +31,11 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       if (trans_lcsd > 0.) cycle ! 7/15/2020 RLB
       if (abs(trans_lcsd) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_delta(i)*log(-(dif_ratio(zo(i))*sec_delta(i))/trans_lcsd)
-        call h_solve(sec_delta(i),dif_ratio(zo(i)),trans_lcsd,h0(zo(i)),h1,soil_depth(i),l_test)
+        h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_lcsd)
+        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_lcsd,h0(zo(i)),h1,soil_depth(i),l_test)
       else
-       ! h = h0*sec_delta*Log(dif_ratio*sec_delta/divgradz) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_delta(i)*log(-(dif_ratio(zo(i))*sec_delta(i))/trans_lcsd)
+       ! h = h0*sec_theta*Log(dif_ratio*sec_theta/divgradz) From Pelletier & Rasmussen (2009)
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_lcsd)
       end if
       if(soil_depth(i) < depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i)>depth_max(zo(i)) ) soil_depth(i)=depth_max(zo(i))
@@ -48,17 +48,17 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       if (trans_lcsd < 0.) trans_lcsd=-trans_lcsd ! 3/4/2019 RLB
       if (abs(trans_lcsd) <= tis) cycle 
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_delta(i)*log(trans_lcsd/(dif_ratio(zo(i))*sec_delta(i)))
-        call h_solve(sec_delta(i),dif_ratio(zo(i)),trans_lcsd,h0(zo(i)),h1,soil_depth(i),l_test)
+        h1=h0(zo(i))*sec_theta(i)*log(trans_lcsd/(dif_ratio(zo(i))*sec_theta(i)))
+        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_lcsd,h0(zo(i)),h1,soil_depth(i),l_test)
       else
-      ! h = h0*sec_delta*Log(divgradz/(dif_ratio*sec_delta)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_delta(i)*log(trans_lcsd/(dif_ratio(zo(i))*sec_delta(i)))
+      ! h = h0*sec_theta*Log(divgradz/(dif_ratio*sec_theta)) From Pelletier & Rasmussen (2009)
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_lcsd/(dif_ratio(zo(i))*sec_theta(i)))
       end if
       if(soil_depth(i) < depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i) > depth_max(zo(i)) ) soil_depth(i)=depth_max(zo(i))
 ! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
-         if(slope_rad(i)>0.2*sc_rad(zo(i))) then
+         if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
          end if
       end if
