@@ -117,7 +117,7 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02t'; bldate='24 Feb 2021'
+  vrsn='0.3.02s'; bldate='25 Feb 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -267,9 +267,13 @@ program regolith
         write(*,*) '***###*** Grid mismatch: "', trim(slopefil), '" ***###***'
         write(*,*) 'Compare numbers of rows, columns and no-data cells'
         write(*,*) 'of slope grid and elevation grid.'
+        write(*,*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
         write(u(1),*) '***###*** Grid mismatch: "', trim(slopefil), '" ***###***'
         write(u(1),*) 'Compare numbers of rows, columns and no-data cells'
         write(u(1),*) 'of slope grid and elevation grid.'
+        write(u(1),*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
         close(u(1))
         stop 'regolith_main, line 264'
       end if
@@ -296,11 +300,15 @@ program regolith
       write(*,*) 'Grid mismatch: "', trim(flo_accfil), '" ***###***'
       write(*,*) 'Compare numbers of rows, columns and no-data cells'
       write(*,*) 'of flow accumulation grid against elevation grid.'
+      write(*,*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
       write(u(1),*) 'Grid mismatch: "', trim(flo_accfil), '" ***###***'
       write(u(1),*) 'Compare numbers of rows, columns and no-data cells'
       write(u(1),*) 'of flow accumulation grid and elevation grid.'
+      write(u(1),*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
       close(u(1))
-      stop 'regolith_main, line 293'
+      stop 'regolith_main, line 297'
     end if
     call srdgrd(grd,col,ncol,nrow,celsiz,no_data_64,&
     & contrib_area,pf1,sctr,imax,temp,u(6),flo_accfil,param,header,u(1))
@@ -315,7 +323,7 @@ program regolith
     write(*,*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
     write(*,*)  'Edit path name in ', trim(init), ', then restart program.'
     close(u(1))
-    stop 'regolith_main, line 293'
+    stop 'regolith_main, line 297'
   else ! *** Exception here models that do not require contrbuting area. ***
     write(u(1),*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
     write(u(1),*) 'Regolith will compute soil depths without adjusting for channel depth.'
@@ -334,11 +342,15 @@ program regolith
          write(*,*) '***###*** Grid mismatch: "', trim(ndxfil), '" ***###***'
          write(*,*) 'Compare numbers of rows, columns and no-data cells'
          write(*,*) 'of cell-index grid and elevation grid.'
+         write(*,*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
          write(u(1),*) 'Grid mismatch: "', trim(ndxfil), '" ***###***'
          write(u(1),*) 'Compare numbers of rows, columns and no-data cells'
          write(u(1),*) 'of cell-index grid and elevation grid.'
+         write(u(1),*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
          close(u(1))
-         stop 'regolith_main, line 326'
+         stop 'regolith_main, line 334'
       end if
       call irdgrd(grd,col,ncol,nrow,celsiz,no_data_int,mnd,&
       &elev_index_lkup,pf2,sctr,imax,itemp,u(7),ndxfil,parami,header,u(1))
@@ -354,7 +366,7 @@ program regolith
       write(*,*) 'Cell index grid needed by NDSD model ', trim(ndxfil), ' was not found'
       write(*,*)  'Edit path name in ', trim(init), ', then restart program.'
       close(u(1))
-      stop 'regolith_main, line 326'
+      stop 'regolith_main, line 334'
     end if
   end if
 ! read plan-view curvature grid 
@@ -367,11 +379,15 @@ program regolith
          write(*,*) '***###*** Grid mismatch: "', trim(pv_curvfil), '" ***###***'
          write(*,*) 'Compare numbers of rows, columns and no-data cells'
          write(*,*) 'of Plan-view curvature grid and elevation grid.'
+         write(*,*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
          write(u(1),*) '***###*** Grid mismatch: "', trim(pv_curvfil), '" ***###***'
          write(u(1),*) 'Compare numbers of rows, columns and no-data cells'
          write(u(1),*) 'of Plan-view curvature grid and elevation grid.'
+         write(u(1),*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
          close(u(1))
-         stop 'regolith_main, line 361'
+         stop 'regolith_main, line 373'
       end if
       call srdgrd(grd,col,ncol,nrow,celsiz,no_data_64,&
       & plan_view_curv,pf1,sctr,imax,temp,u(11),pv_curvfil,param,header,u(1))
@@ -387,7 +403,7 @@ program regolith
       write(*,*) 'P-V curvature grid: "', trim(pv_curvfil), '"'
       write(*,*) 'Edit ', trim(init), ' to correct file name and directory location or select a different model.'
       close(u(1))
-      stop 'regolith_main.f95, line 361'
+      stop 'regolith_main.f95, line 373'
     end if
   end if
 ! Import property zone grid
@@ -401,11 +417,15 @@ program regolith
          write(*,*) '***###*** Grid mismatch: "', trim(zonfil), '" ***###***'
          write(*,*) 'Compare numbers of rows, columns and no-data cells'
          write(*,*) 'of zone grid and elevation grid.'
+         write(*,*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
          write(u(1),*) '***###*** Grid mismatch: "', trim(zonfil), '" ***###***'
          write(u(1),*) 'Compare numbers of rows, columns and no-data cells'
          write(u(1),*) 'of zone grid and elevation grid.'
+         write(u(1),*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
          close(u(1))
-         stop 'regolith_main, line 394'
+         stop 'regolith_main, line 410'
       end if
       call irdgrd(grd,col,ncol,nrow,celsiz,no_data_int,mnd,&
              &   zo,pf2,sctr,imax,itemp,u(11),zonfil,parami,header,u(1))
@@ -418,7 +438,7 @@ program regolith
         write(*,*) '***###*** Negative property zone found ***###***'
         write(u(1),*) 'Edit property zone grid and restart program.'
         close(u(1))
-        stop 'regolith_main.f95, line 415'
+        stop 'regolith_main.f95, line 435'
       end if
     else
       write(u(1),*) '***###*** Property zone grid was not found. ***###***'
@@ -429,7 +449,7 @@ program regolith
       write(*,*) 'zone grid: "',trim(zonfil),'"'
       write(*,*) 'Edit ', trim(init), ' to check zone file name and directory location.'
       close(u(1))
-      stop 'regolith_main.f95, line 394'
+      stop 'regolith_main.f95, line 410'
     endif
   else
     zo=1; zon=1 ! only one property zone.
@@ -520,7 +540,7 @@ program regolith
       write(u(1),*) '***###*** Invalid soil depth model selected. ***###***'
       write(u(1),*) 'Edit ', trim(init), ' to correct model code, then restart program'
       close(u(1))
-      stop 'regolith_main.f95, line 516'
+      stop 'regolith_main.f95, line 536'
   end select 
   write(u(1),*) 'Range soil depth: ', minval(soil_depth), maxval(soil_depth)
 ! (Optional) Apply smoothing algorithm to computed soil depth.

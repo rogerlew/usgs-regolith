@@ -435,7 +435,7 @@ contains
   if (reset_flag) write(ulog,*) 'Incorrect value of running average <n_points> was reset to: ', n_points
   write (ulog,*) '-- END OF INITIALIZATION DATA --'  
   write (ulog,*) ''
-  write (ulog,*) title
+  write (ulog,*) trim(title)
   write (ulog,*) ''
   return
   201  continue
