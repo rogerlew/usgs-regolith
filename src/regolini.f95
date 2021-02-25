@@ -176,7 +176,7 @@ contains
     if(theta_c_deg(iz) < 0. .or. theta_c_deg(iz) > 90.)then
       out_of_range = .true.
       write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(2)='Critical slope angle, Sc, out of range at line '//trim(lin_num)//' of '//trim(init)
+      msg(2)='Critical slope angle, theta_c_deg, out of range at line '//trim(lin_num)//' of '//trim(init)
     else
       msg(2) = ''
     end if
@@ -231,7 +231,7 @@ contains
     if(theta_c_deg(iz) < 0. .or. theta_c_deg(iz) > 90.)then
       out_of_range = .true.
       write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(2)='Critical slope angle, Sc, out of range at line '//trim(lin_num)//' of '//trim(init)
+      msg(2)='Critical slope angle, theta_c_deg, out of range at line '//trim(lin_num)//' of '//trim(init)
     else
       msg(2) = ''
     end if

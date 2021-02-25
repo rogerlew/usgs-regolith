@@ -67,7 +67,7 @@ program regolith
   use read_inputs
   implicit none
   integer, parameter:: ulen=30
-  integer:: imax,row,col, chek_row, chek_col, chek_celsiz, chek_imax
+  integer:: imax,row,col, chek_row, chek_col, chek_celsiz, chek_imax, zo_min
   integer grd,i,j,j1,mnd,imx1,nwf !,patlen
   integer:: no_data_int,sctr,num_steps, num_zones, max_zones, n_points ! Added n_points 8/20/2020 RLB
   integer:: ncol,nrow,u(ulen)
@@ -117,7 +117,7 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02s'; bldate='25 Jan 2021'
+  vrsn='0.3.02t'; bldate='24 Feb 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -177,11 +177,15 @@ program regolith
       write(u(1),*) '***###*** Grid-size parameters do not match ***###***'
       write(u(1),*) 'Delete Grid-size file (TIgrid_size.txt or TRgrid_size.txt)&
         & from directory containng elevation grid, then restart program.'
+      write(u(1),*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
       write(*,*) '***###*** Grid-size parameters do not match ***###***'
       write(*,*) 'Delete Grid-size file (TIgrid_size.txt or TRgrid_size.txt)&
           & from directory containng elevation grid, then restart program.'
+      write(*,*) 'chek_row, row; chek_col, col; chek_imax, imax', chek_row, row,&
+          & '; ', chek_col, col, '; ', chek_imax, imax
       close(u(1))
-      stop ' regolith_main.f95, line 178'
+      stop ' regolith_main.f95, line 174'
     end if
     call srdgrd(grd,col,ncol,nrow,celsiz,no_data_64,&
      &    elev,pf1,sctr,imax,temp,u(4),elevfil,param,header,u(1))
@@ -193,7 +197,7 @@ program regolith
     write(*,*) 'Elevation grid was not found'
     write(*,*) 'Edit path name of elevation grid in ', trim(init), ' then restart program.'
     close(u(1))
-    stop ' regolith_main.f95, line 178'
+    stop ' regolith_main.f95, line 174'
   end if
 ! *****************************************************************
   write(u(1),*) '---------------******---------------'
@@ -311,7 +315,7 @@ program regolith
     write(*,*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
     write(*,*)  'Edit path name in ', trim(init), ', then restart program.'
     close(u(1))
-    stop 'regolith_main, line 304'
+    stop 'regolith_main, line 293'
   else ! *** Exception here models that do not require contrbuting area. ***
     write(u(1),*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
     write(u(1),*) 'Regolith will compute soil depths without adjusting for channel depth.'
@@ -334,7 +338,7 @@ program regolith
          write(u(1),*) 'Compare numbers of rows, columns and no-data cells'
          write(u(1),*) 'of cell-index grid and elevation grid.'
          close(u(1))
-         stop 'regolith_main, line 324'
+         stop 'regolith_main, line 326'
       end if
       call irdgrd(grd,col,ncol,nrow,celsiz,no_data_int,mnd,&
       &elev_index_lkup,pf2,sctr,imax,itemp,u(7),ndxfil,parami,header,u(1))
@@ -350,7 +354,7 @@ program regolith
       write(*,*) 'Cell index grid needed by NDSD model ', trim(ndxfil), ' was not found'
       write(*,*)  'Edit path name in ', trim(init), ', then restart program.'
       close(u(1))
-      stop 'regolith_main, line 324'
+      stop 'regolith_main, line 326'
     end if
   end if
 ! read plan-view curvature grid 
@@ -367,7 +371,7 @@ program regolith
          write(u(1),*) 'Compare numbers of rows, columns and no-data cells'
          write(u(1),*) 'of Plan-view curvature grid and elevation grid.'
          close(u(1))
-         stop 'regolith_main, line 358'
+         stop 'regolith_main, line 361'
       end if
       call srdgrd(grd,col,ncol,nrow,celsiz,no_data_64,&
       & plan_view_curv,pf1,sctr,imax,temp,u(11),pv_curvfil,param,header,u(1))
@@ -383,7 +387,7 @@ program regolith
       write(*,*) 'P-V curvature grid: "', trim(pv_curvfil), '"'
       write(*,*) 'Edit ', trim(init), ' to correct file name and directory location or select a different model.'
       close(u(1))
-      stop 'regolith_main.f95, line 358'
+      stop 'regolith_main.f95, line 361'
     end if
   end if
 ! Import property zone grid
@@ -401,12 +405,21 @@ program regolith
          write(u(1),*) 'Compare numbers of rows, columns and no-data cells'
          write(u(1),*) 'of zone grid and elevation grid.'
          close(u(1))
-         stop 'regolith_main, line 391'
+         stop 'regolith_main, line 394'
       end if
       call irdgrd(grd,col,ncol,nrow,celsiz,no_data_int,mnd,&
              &   zo,pf2,sctr,imax,itemp,u(11),zonfil,parami,header,u(1))
       write(u(1),*) 'Property zone grid'
       write(u(1),*) trim(zonfil),sctr,' data cells'  
+      zo_min = minval(zo)
+      if(zo_min <=0) then
+        write(u(1),*) '***###*** Negative property zone found ***###***'
+        write(u(1),*) 'Edit property zone grid and restart program.'
+        write(*,*) '***###*** Negative property zone found ***###***'
+        write(u(1),*) 'Edit property zone grid and restart program.'
+        close(u(1))
+        stop 'regolith_main.f95, line 415'
+      end if
     else
       write(u(1),*) '***###*** Property zone grid was not found. ***###***'
       write(u(1),*) 'zone grid: "',trim(zonfil),'"'
@@ -416,7 +429,7 @@ program regolith
       write(*,*) 'zone grid: "',trim(zonfil),'"'
       write(*,*) 'Edit ', trim(init), ' to check zone file name and directory location.'
       close(u(1))
-      stop 'regolith_main.f95, line 391'
+      stop 'regolith_main.f95, line 394'
     endif
   else
     zo=1; zon=1 ! only one property zone.
@@ -507,7 +520,7 @@ program regolith
       write(u(1),*) '***###*** Invalid soil depth model selected. ***###***'
       write(u(1),*) 'Edit ', trim(init), ' to correct model code, then restart program'
       close(u(1))
-      stop 'regolith_main.f95, line 500'
+      stop 'regolith_main.f95, line 516'
   end select 
   write(u(1),*) 'Range soil depth: ', minval(soil_depth), maxval(soil_depth)
 ! (Optional) Apply smoothing algorithm to computed soil depth.

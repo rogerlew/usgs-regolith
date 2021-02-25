@@ -26,6 +26,7 @@ subroutine ssizgrd(row,col,celsiz,nodat,ctr,u,infil,header,ulog)
   do m=1,6
     if (trim(header(m))=='ncols') col=int(param(m))
     if (trim(header(m))=='nrows') row=int(param(m))
+!    if (index(header(m),'row') > 0) row=int(param(m))
     if (trim(header(m))=='cellsize') celsiz=param(m)
     if (trim(header(m))=='NODATA_value') nodat=param(m)
     if (trim(header(m))=='nodata_value') nodat=param(m)
@@ -65,6 +66,8 @@ subroutine ssizgrd(row,col,celsiz,nodat,ctr,u,infil,header,ulog)
   125  close(u)
     write(*,*) ctr,' = number of data cells'
     write(*,*) ctall,' = total number of cells'
+    write(*,*) row, col, '= number of rows, columns' 
+!    write(*,*) (param(m), m=1,6)
   deallocate(temp)
   return
   23  continue
