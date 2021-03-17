@@ -3,7 +3,7 @@ README
 
 Description
 -----------
-The computer program REGOLITH is a Fortran program designed for estimating soil thickness over a digital landscape.  The program implements various published empirical and computational models for soil thickness.  This command-line program is used in conjunction with Python scripts and shell scripts to prepare input files and visualize results.
+The computer program REGOLITH is a Fortran program designed for estimating soil thickness over a digital landscape.  The program implements various published empirical and computational models for soil thickness.  This command-line program is used in conjunction with Python scripts to prepare input files and visualize results.
 
 Purpose and limitations
 -----------------------
@@ -11,11 +11,11 @@ The program is designed to make rapid estimates of soil depth using several publ
 
 Compiling the program from source code
 --------------------------------------
-A simple makefile in the src directory can be used to compile the fortran source code.  The makefile has been tested on a linux system which had the GNU compiler collection (gcc) and gfortran installed.  The makefile should be usable after minor modifications with gfortran under Cygwin or OSX.  After downloading the repository, change directories to "src" and type `make` to compile regolith to create an executable file.
+A simple makefile in the src directory can be used to compile the fortran source code.  The makefile has been tested on a linux system which had the GNU compiler collection (gcc) and gfortran installed.  The makefile should be usable after minor modifications with gfortran under Cygwin or OSX.  After downloading the repository, change directories to "src" and type `make` to compile REGOLITH to create an executable file.  If users do not have a compiler installed, an executable file (regolith.exe) is provided in the Releases section of the repository.
 
 Using the program
 -----------------
-The program runs from the command line and can be compiled for any operating system that supports Fortran 95.  The user provides a small input file, *rg_in.txt*, that contains a list of model parameters and a list of path names for other input files.  The digital elevation model and related input files, slope, upslope contributing area, elevation index, plan-view curvature, and property zone are raster grids in ASCII grid format.  All input grids must have the same spatial reference, resolution, and footprint.  Input file requirements vary depending on the selected soil model; however, each model requires a user provided DEM. The NDSD model requires an elevation index grid, which can be created by the utility program TopoIndex (distributed with TRIGRS).  An updated version of TopoIndex is available at https://code.usgs.gov/usgs/landslides-trigrs.  For the DRS3 model, a user-supplied plan-view curvature grid, which can be created using GIS software, is also needed. The NASD, NSDA, and WNDX models require a flow-accumulation grid (count of upslope grid cells).  While each model will utilize a grid of slope angle values, the program can compute this and optionally output the grid if one does not exist or if the user specifies topographic smoothing.  The outputted slope grid can be used in future iterations within the same study area to improve computation time.  In addition to a grid of slope angle values, the program outputs a log file, an ASCII grid of computed soil depth, and optional grids of various intermediate values.
+The program runs from the command line and can be compiled for any operating system that supports Fortran 95.  The user provides a small input file, *rg_in.txt*, that contains a list of model parameters and a list of path names for other input files.  The digital elevation model and related input files, slope, upslope contributing area, elevation index, plan-view curvature, and property zone are raster grids in ASCII grid format.  All input grids must have the same spatial reference, resolution, and footprint.  Input file requirements vary depending on the selected soil model; however, each model requires a user provided DEM. The NDSD model requires an elevation index grid, which can be created by the utility program TopoIndex (distributed with TRIGRS).  An updated version of TopoIndex is available at https://code.usgs.gov/usgs/landslides-trigrs.  For the DRS3 model, a user-supplied plan-view curvature grid, which can be created using GIS software, is also needed. The NASD, NSDA, and WNDX models require a flow-accumulation grid (count of upslope grid cells) which can additionally be created using GIS software.  While each model will utilize a grid of slope angle values, the program can compute this and optionally output the grid if one does not exist or if the user specifies topographic smoothing.  The outputted slope grid can be used in future iterations within the same study area to improve computation time.  In addition to a grid of slope angle values, the program outputs a log file, an ASCII grid of computed soil depth, and optional grids of various intermediate values.
 
 Input parameter definitions
 ---------------------------
@@ -59,7 +59,7 @@ Name,         Type,      Description
 Inputs used by each soil depth model
 ------------------------------------
 
-Model code,     Description and Reference(s)
+Model code,     Description and reference(s)
 -----------------------------------------------
 - DRS1:         Empirical exponential slope dependence (DeRose et al. 1991)
 - DRS2:         Empirical 3rd-degree polynomial slope dependence (DeRose et al. 1991)
@@ -71,31 +71,31 @@ Model code,     Description and Reference(s)
 - NASD:         Nonlinear slope and area dependent transport (Pelletier & Rasmussen, 2009)
 - NDSD:         Nonlinear slope and depth dependent transport (Pelletier & Rasmussen, 2009)
 
-Soil Depth Model Formulas
+Soil depth model formulas
 ------------------------------------
-Empirical Model Formula Parameters and Regolith Input Parameter Names (if applicable)
+Empirical model formula parameters and REGOLITH input parameter names (if applicable)
 
-- *d*<sub>*r*</sub>,     regolith depth (m)
+- *d*<sub>*r*</sub>,     regolith depth, m
 - *C*<sub>*0*</sub>,     empirical constant (C0)
 - *C*<sub>*1*</sub>,     empirical constant (C1)
 - *C*<sub>*2*</sub>,     empirical constant (C2)
-- &theta;,               mean slope angle (degrees)
+- &theta;,               mean slope angle, degrees
 - *p*,                   exponent of DRS2 polynomial or of upslope area (power)
 - &kappa;,               plan-view curvature of ground surface, Arc convention
-- *A*,                   upslope contributing area (m<sup>2</sup>)
+- *A*,                   upslope contributing area, m<sup>2</sup>
 
-Process Based Model Formula Parameters and Regolith Input Parameter Names (if applicable)
-- *d*<sub>*r*</sub>,        regolith depth (m)
-- *z*,                      ground surface (m)
+Process mased model formula parameters and REGOLITH input parameter names (if applicable)
+- *d*<sub>*r*</sub>,        regolith depth, m
+- *z*,                      ground surface, m
 - *D*,                      diffusivity ratio (dif_ratio)
-- *h*<sub>*0*</sub>,        characteristic soil depth (h0, m)
-- &theta;,                  mean slope angle (degrees)
-- *S*<sub>*c*</sub>,        critical slope, tangent of angle of stability, &theta;<sub>*c*</sub> (theta_c, degrees)
-- *A*,                      upslope contributing area (m<sup>2</sup>)
+- *h*<sub>*0*</sub>,        characteristic soil depth, m (h0)
+- &theta;,                  mean slope angle, degrees
+- *S*<sub>*c*</sub>,        critical slope, tangent of angle of stability, &theta;<sub>*c*</sub>, degrees (theta_c)
+- *A*,                      upslope contributing area, m<sup>2</sup>
 - *m*,                      exponent of upslope area (power)
-- *h*<sub>*n*</sub>,        soil thickness normal to surface (m)
+- *h*<sub>*n*</sub>,        soil thickness normal to surface, m 
 
-| `trans_model` | Regolith Depth Formula |
+| `trans_model` | Regolith depth formula |
 | ------ | ------ |
 | DRS1 | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%3DC_%7B0%7De%5E%7B-C_%7B1%7D%5Ctheta%7D) |
 | DRS2 | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) |
@@ -149,7 +149,7 @@ Output files
 ------------
 The following table outlines the prefixes of the output files created within the program. Several intermediates, such as derivatives, can be output if logical `l_deriv` is set to .true. within the input file and outputs will vary based on the model. Additional suffixes may be added to output file names if certain logicals, such as `topoSmooth`, are set to .true..
 
-| File Prefix/Suffix | Logical to Trigger Output | Description | Applicable models |
+| File prefix/suffix | Logical to trigger output | Description | Applicable models |
 | ------ | ------ | ------ | ------ |
 | `RG_Log_`, `RG_` | All model runs | Log file outlining program performance and soil depth output grid | All models |
 | `RG_aspect_gs_`, `RG_slope_` | `l_deriv` .true., no slope file specified in input | Grids of angles of steepest descent and slope in degrees | All models |
@@ -163,37 +163,36 @@ The following table outlines the prefixes of the output files created within the
 | `_hmp` | `hump_prod` .true. | Suffix added to output if humped production model was used | All models |
 | `_test` | `l_test` .true. | Suffix added to output if model run in test mode | All models |
 
-Suggested Input Parameter Values
----------------------------
-Suggested Input Parameter Values for Empirical Models
+
+Suggested input parameter values for empirical models
 -----------------------------------------------
-The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in human tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose et al. (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho et al. (2012).  Note that depth_max and depth_min have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
+The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in human tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose et al. (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho et al. (2012) are provided.  Note that depth_max and depth_min have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
 
 | `trans_model` | `theta_c` (degrees) |`depth_max` (m) | `depth_min` (m) | `C0` | `C1` |  `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | DRS1 | 30 - 60 | 2 - 5 | 0 - 0.1 | 1 - 7 | 0.005 - 0.06 | — | — |
 | DRS2 | 30 - 60 | 2 - 5 | 0 - 0.1 | 1 - 3 | 0.01 - 0.06 | — | 1 - 3 |
 | DRS3 | 30 - 60 | 2 - 5 | 0 - 0.1 | 1 - 5 | 0.01 - 0.06 | 1.5 | — |
-| WNDX | 30 - 60 | 2 - 5 | 0 - 0.1 | 0.1 - 1 | — | — | 1 |
+| WNDX | 30 - 60 | 2 - 5 | 0 - 0.1 | 0.1 - 1 | — | — | 1 - 2 |
 
 
-Continental Glacial Deposits in Humid Temperate Settings
+Continental glacial deposits in humid temperate setting
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | DRS1 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | — | — | 
 | DRS2 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | — | 1 - 2 |
 | DRS3 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | 1 - 2 | — |
-| WNDX | 40 - 60 | 0.5 - 0.8 | — | — | 1 |
+| WNDX | 40 - 60 | 0.2 - 0.5 | — | — | 2 |
 
-Granitoid and Gneiss in Semi-Arid Subalpine Settings
+Granitoid and gneiss in semi-arid subalpine setting
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | DRS1 | 35 - 55 | 1 - 3 | 0.04 - 0.06 | — | — | 
 | DRS2 | 35 - 55 | 1 - 3 | 0.05 - 0.07 | — | 3 |
 | DRS3 | 35 - 55 | 1 - 3 | 0.04 - 0.06 | 1 | — |
-| WNDX | 35 - 55 | 0.2 - 0.3 | — | — | 1 |
+| WNDX | 35 - 55 | 0.1 - 0.3 | — | — | 1 |
 
-Clastic Sedimentary in Humid Temperate Setting
+Clastic sedimentary in humid temperate setting
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | DRS1 | 40 - 60 | 6 - 7 | 0.04 - 0.05 | — | — | 
@@ -201,7 +200,7 @@ Clastic Sedimentary in Humid Temperate Setting
 | DRS3 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | 1 - 2 | — |
 | WNDX | 40 - 60 | 0.2 - 1 | — | — | 1 |
 
-Submarine Basalt and Volcaniclastic in Humid Tropical Setting, Tello (2020)
+Submarine basalt and volcaniclastic in humid tropical setting, Tello (2020)
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | DRS1 | 50 - 60 | 1 - 3 | 0.005 - 0.01 | — | — | 
@@ -209,7 +208,7 @@ Submarine Basalt and Volcaniclastic in Humid Tropical Setting, Tello (2020)
 | DRS3 | 50 - 60 | 1 - 3 | 0.01 | 1 - 4 | — |
 | WNDX | 50 - 60 | 0.35 - 0.45 | — | — | 1 |
 
-Granitoid in Humid Tropical Setting, Tello (2020) 
+Granitoid in humid tropical setting, Tello (2020) 
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | DRS1 | 50 - 60 | 1 - 3 | 0.02 - 0.04 | — | — | 
@@ -223,14 +222,14 @@ Sandstone in humid temperate setting, DeRose (1996) and Baum et al. (2011)
 | DRS2 | 30 - 60 | 1.57 - 1.68 | 0.019 - 0.022 | — | 3 |
 | DRS3 | 30 - 60 | 5.0 | 0.04 | 1.5 | — |
 
-Clastic sedimentary in a marine tropical to humid temperate setting, in southern Taiwan
+Clastic sedimentary in a marine tropical to humid temperate setting, Ho et al. (2012)
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | WNDX | 30 - 60 | 0.1- 0.3 | — | — | 1 |
  
  
  
-Suggested Input Parameter Values for Process-Based Models
+Suggested input parameter values for process-based models
 -----------------------------------------------
 The following table displays the full ranges of parameters used in running the program successfully with the process-based models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were conducted on sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in human tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020). `l_test` is available for verifying code output against analytical solutions. The test mode ranges were obtained from Pelletier & Rasmussen (2009) from tests on soils in Pima County, Arizona.
 
@@ -243,16 +242,16 @@ The following table displays the full ranges of parameters used in running the p
 | NDSD | 0.3 - 0.5 | 30 - 60 | 0.1 - 3 | 2 - 5 | 0 - 0.1 | — |
 
 
-Continental Glacial Deposits in Humid Temperate Settings
+Continental glacial deposits in humid temperate setting
 | `trans_model` |`theta_c` (degrees) | `dif_ratio` | `power` |
 | ----- | ------ | ------ | ------ |
-| LCSD | 40 - 60 | 0.009 - 0.02 | — |
+| LCSD | 40 - 60 | 0.001 - 0.02 | — |
 | NSD | 40 - 60 | 0.005 - 0.03 | — |
 | NSDA | 40 - 60 | 0.5 - 0.8 | 2 |
 | NASD | 40 - 60 | 6 - 9 | 3 |
 | NDSD | 40 - 60 | 0.08 - 1 | — |
 
-Granitoid and Gneiss in Semi-Arid Subalpine Settings
+Granitoid and gneiss in semi-arid subalpine setting
 | `trans_model` | `theta_c` (degrees) | `dif_ratio` | `power` |
 | ----- | ------ | ------ | ------ |
 | LCSD | 35 - 55 | 0.01 - 0.04 | — |
@@ -261,7 +260,7 @@ Granitoid and Gneiss in Semi-Arid Subalpine Settings
 | NASD | 35 - 55 | 3 - 4 | 1 |
 | NDSD | 35 - 55 | 0.03 - 0.05 | — |
 
-Clastic Sedimentary in Humid Temperate Setting
+Clastic sedimentary in humid temperate setting
 | `trans_model` | `theta_c` (degrees) | `dif_ratio` | `power` |
 | ----- | ------ | ------ | ------ |
 | LCSD | 40 - 60 | 0.001 - 0.005 | — |
@@ -270,7 +269,7 @@ Clastic Sedimentary in Humid Temperate Setting
 | NASD | 40 - 60 | 4 - 5 | 2 |
 | NDSD | 40 - 60 | 0.08 - 0.09 | — |
 
-Submarine Basalt and Volcaniclastic in Humid Tropical Setting, Tello (2020)
+Submarine basalt and volcaniclastic in humid tropical setting, Tello (2020)
 | `trans_model` | `theta_c` (degrees) | `dif_ratio` | `power` |
 | ----- | ------ | ------ | ------ |
 | NSD | 50 - 60 | 0.005 - 0.009 | — |
@@ -278,7 +277,7 @@ Submarine Basalt and Volcaniclastic in Humid Tropical Setting, Tello (2020)
 | NASD | 50 - 60 | 0.15 - 0.25 | 3 |
 | NDSD | 50 - 60 | 2 - 3 | — |
 
-Granitoid in Humid Tropical Setting, Tello (2020)
+Granitoid in humid tropical setting, Tello (2020)
 | `trans_model` | `theta_c` (degrees) | `dif_ratio` | `power` |
 | ----- | ------ | ------ | ------ |
 | NSD | 50 - 60 | 0.08 - 0.1 | — |
@@ -286,7 +285,7 @@ Granitoid in Humid Tropical Setting, Tello (2020)
 | NASD | 50 - 60 | 1 - 2 | 3 |
 | NDSD | 50 - 60 | 0.1 - 0.3 | — |
 
-Pima County, AZ Test Mode Ranges for Metamorphic and Granite in Temperate Semi-Arid Setting, Pelletier & Rasmussen (2009)
+Test mode ranges for metamorphic and granite in temperate semi-arid Setting, Pelletier & Rasmussen (2009)
 | `trans_model` | `theta_c` (degrees) | `dif_ratio` `l_test` | `power` |
 | ----- | ------ | ------ | ------ |
 | LCSD | 30 - 60 | 1 - 5 | — |
@@ -294,14 +293,14 @@ Pima County, AZ Test Mode Ranges for Metamorphic and Granite in Temperate Semi-A
 | NSDA | 30 - 60 | 1 - 5 | 1 - 2 |
 | NASD | 30 - 60 | 1 - 5 | 1 - 2 |
  
-Suggested Input Parameter Values for all Models
+Suggested input parameter values for all models
 -----------------------------------------------
-| Parameter | Suggested Range |
+| Parameter | Suggested range |
 | ------ | ------ |
 | `chan_thresh` (m<sup>2</sup>) | 1500 - 2000 |
 | `chan_depth` (m) | < 0.5 |
 
-To override (turn off) the adjustment of soil depth in steep channels, the user can enter a large value for the channel threshold. In most cases, chan_thresh > 10<sup>6</sup> will suffice.  Alternately, for models that are not area dependent, omitting the flow-accumulation grid will likewise override the depth adjustment in steep channels.
+The `chan_thresh` parameter represents the minimum upslope contributing area at which channels initiate.  If the upslope contributing area as provided in the flow-accumulation grid is greater than this threshold and if the calculated soil depth is greater than the average depth of alluvium in channels steeper than 20% of the critical slope (`chan_depth`), the depths in these regions will be corrected to `chan_depth`.  To override (turn off) the adjustment of soil depth in steep channels, the user can enter a large value for the channel threshold. In most cases, `chan_thresh` > 10<sup>6</sup> will suffice.  Alternately, for models that are not area dependent, omitting the flow-accumulation grid will likewise override the depth adjustment in steep channels.
  
 Optional property zones
 -----------------------
@@ -322,9 +321,9 @@ An example rg_in.txt file is provided in the main directory of this repository. 
 
 Additional sample data for a small basin in dissected topography of the Oregon Coast Range are available for free download (Baum and others, 2020).  These data are stored in GEOTIFF format, but can be readily converted to ASCII grid format supported by REGOLITH using commercial or open-source GIS software.
 
-Regolith Iterations
+Regolith iterations
 -------------------
-A Jupyter Notebook script Regolith_Iterations.ipynb is provided in the main directory and can be used in conjunction with the program to test varying ranges of parameters.  Running the script will iterate through these parameters by rewriting rg_in.txt with the varying parameters within the ranges specified by the user within the script.  REGOLITH will run for each set of parameters and output results with varying suffixes to denote the parameters used in each run.
+A Jupyter Notebook script Regolith_Iterations.ipynb is provided in the main directory of this repository and can be used in conjunction with the program to test varying ranges of parameters.  Running the script will iterate through these parameters by rewriting rg_in.txt with the varying parameters within the ranges specified by the user within the script.  REGOLITH will run for each set of parameters and output results with varying suffixes to denote the parameters used in each run.
 
 
 References cited
