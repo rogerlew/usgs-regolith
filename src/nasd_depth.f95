@@ -43,15 +43,15 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
     do i=1,imax
       trans_nasd=d_trans_x_dx(i)+d_trans_y_dy(i)
       unused(i) = trans_nasd
-      if (trans_nasd > 0.) cycle 
+      if (trans_nasd < 0.) cycle ! if (trans_nasd > 0.) cycle 
       if (abs(trans_nasd) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       cycl_ctr=cycl_ctr+1
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nasd) ! For testing, 8/4/2020
+        h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_nasd) ! For testing, 8/4/2020 h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nasd) 
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_test)
       else
       ! h = h0*sec_theta*Log(-dif_ratio*sec_theta/(area*divgradz/nl_slope_fac)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nasd) ! For testing, 8/4/2020
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_nasd) ! For testing, 8/4/2020 soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nasd) 
       endif
       ctr=ctr+1
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))

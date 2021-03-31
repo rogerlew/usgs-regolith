@@ -1,6 +1,6 @@
 subroutine h_solve(a,b,c,h0,h1,h,l_test)
 !  Solver for humped soil production model (see Peletier & Rasmussen, 2009)
-!  Code updated 3/7/2019, RLB
+!  Code updated 3/31/2020, RLB
   implicit none
 ! LOCAL VARIABLES
   integer:: i,mmax,itmax
@@ -16,9 +16,10 @@ subroutine h_solve(a,b,c,h0,h1,h,l_test)
   hmax=30. 
   hlb=0.01
   hub=0.0
+! Bracket the range in which the depth function changes sign.  
   if(l_test) then ! test mode
-    if(-(h0/hlb)*c/(b*a) >0.) then
-      fl=hlb-h0*a*log(-(hlb/h0)*(b*a)/c) 
+    if((h0/hlb)*c/(b*a) >0.) then !(-(h0/hlb)*c/(b*a) >0.)
+      fl=hlb-h0*a*log((hlb/h0)*(b*a)/c) ! fl=hlb-h0*a*log(-(hlb/h0)*(b*a)/c)
     else
       fl=hlb
     end if
@@ -26,12 +27,12 @@ subroutine h_solve(a,b,c,h0,h1,h,l_test)
     do i=1,20
       hub=hub+1.5 !increase hub
       ftemp=fu;htemp=hub-1.5
-      if(-(h0/hub)*c/(b*a) <0.) then
+      if((h0/hub)*c/(b*a) <0.) then !if(-(h0/hub)*c/(b*a) <0.) then
         cycle
       else
-        fu=hub-h0*a*log(-(hub/h0)*(b*a)/c)
+        fu=hub-h0*a*log((hub/h0)*(b*a)/c) !fu=hub-h0*a*log(-(hub/h0)*(b*a)/c)
       endif
-    if(fl*fu<0.) exit
+    if(fl*fu<0.) exit ! The function changes sign between hlb and hub
     end do
   else ! production mode 
     if((h0/hlb)*c/(b*a) >0.) then
@@ -48,7 +49,7 @@ subroutine h_solve(a,b,c,h0,h1,h,l_test)
       else
         fu=hub-h0*a*log((h0/hub)*c/(b*a)) 
       endif
-    if(fl*fu<0.) exit
+    if(fl*fu<0.) exit ! The function changes sign between hlb and hub
     end do
   endif
   if(hub>=hmax) then
@@ -56,7 +57,7 @@ subroutine h_solve(a,b,c,h0,h1,h,l_test)
     return 
   end if
   fl=ftemp;if(hub>1.5)hlb=htemp
-!Choose trial depth 
+! Choose trial depth 
   if(fl<0.) then
     htb=hlb
     dx=hub-hlb

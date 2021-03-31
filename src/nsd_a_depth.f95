@@ -35,13 +35,13 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
       if(power /= 1.) aexpn=aexpn**power
       if(ncol == 1 .or. nrow == 1) aexpn=sqrt(aexpn)
       if (abs(trans_nsd*aexpn) <=tis) cycle ! 3/4/2019 RLB
-      if (trans_nsd*aexpn > 0.) cycle ! 3/4/2019 RLB
+      if (trans_nsd*aexpn < 0.) cycle ! 3/4/2019 RLB ! if (trans_nsd*aexpn > 0.) cycle 
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn))
+        h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) ! h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn))
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_test)
       else
        ! h = h0*sec_theta*Log(dif_ratio*sec_theta/(area*divgradz/nl_slope_fac)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn))
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) ! soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn))
       end if
       if(soil_depth(i)<depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
@@ -59,8 +59,7 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
         h1=h0(zo(i))*sec_theta(i)*log(trans_nsd*aexpn/(dif_ratio(zo(i))*sec_theta(i)))
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_test)
       else
-      ! h = h0*sec_theta*Log((area*divgradz/nl_slope_fac)/(dif_ratio*sec_theta)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_nsd*aexpn/(dif_ratio(zo(i))*sec_theta(i)))
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_nsd*aexpn/(dif_ratio(zo(i))*sec_theta(i))) 
       end if
       if(soil_depth(i)<0.) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))

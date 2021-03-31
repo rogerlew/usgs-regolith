@@ -32,14 +32,14 @@ subroutine nsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_t
     do i=1,imax
       trans_nsd=d_trans_x_dx(i)+d_trans_y_dy(i)
       unused(i) = trans_nsd
-      if (trans_nsd > 0.) cycle 
+      if (trans_nsd < 0.) cycle  ! if (trans_nsd > 0.) cycle
       if (abs(trans_nsd) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nsd)
+        h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_nsd) ! h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nsd)
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd,h0(zo(i)),h1,soil_depth(i),l_test)
       else
     ! h = h0*sec_theta*Log(dif_ratio*sec_theta/(divgradz/nl_slope_fac)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nsd) 
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_nsd) ! soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nsd) 
       end if
         if(soil_depth(i)<0.) soil_depth(i)=depth_min(zo(i))
         if(soil_depth(i)>depth_max(zo(i)) ) soil_depth(i)=depth_max(zo(i))
@@ -56,7 +56,7 @@ subroutine nsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_t
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd,h0(zo(i)),h1,soil_depth(i),l_test)
       else
         ! h = h0*sec_theta*Log((divgradz/nl_slope_fac)/(dif_ratio*sec_theta)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_nsd/(dif_ratio(zo(i))*sec_theta(i)))
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_nsd) !soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_nsd/(dif_ratio(zo(i))*sec_theta(i)))
       end if
         if(soil_depth(i)<0.) soil_depth(i)=depth_min(zo(i))
         if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
