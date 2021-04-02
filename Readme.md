@@ -51,7 +51,7 @@ Name,         Type,      Description
 - `suffix`       char,      Identification code to be added to names of output files (<=16 char.)
 - `lasc`         logical,   Specify grid file extension? (*.asc* if `.true.`, *.txt* if `.false`)
 - `l_deriv`      logical,   Specify to output derivatives and related quantites
-- `l_test`       logical,   Switch between test mode and production mode for the LCSD, NASD, NSDA, and NSD models.  Test mode should be used solely for comparison with analytical solutions.  Production mode is for mapping soil depths using a modified form of the theoretical model and is the preferred mode for applying the models to natural terrain.
+- `l_mode`       logical,   Switch between original mode and modified mode for the LCSD, NASD, NSDA, and NSD models.  Original mode is based on analytical formulas derived by combining soil production models with sediment transport theory (Dietrich and others, 1995; Pelletier and Rasmussen, 2009).  This mode is used for comparison with analytical solutions (to test program operation) as well as for mapping soil depth.  Modified mode is based on slight adjustments to the original analytical formulas and and is available for mapping soil depths in digital representations of natural terrain.  Modified mode computes soil depth distributions that may overcome some of the effects of small scale roughness in high-resolution DEMs without needing to smooth them.
 - `topoSmooth`   logical, Specify topographic smoothing (enabled if `.true.`,  diabled if `.false.`)
 - `soilSmooth`   logical,  Specify smoothing of computed soil depth (enabled if `.true.`,  diabled if `.false.`)
 - `n_points`     integer,  Window size, in number of grid cells, of a running average to approximate gaussian smoothing.
@@ -114,10 +114,10 @@ Model code,    Required input parameters
 - DRS2:         `theta_c, depth_min, depth_max, C0, C1, power, chan_thresh, chan_depth`
 - DRS3:         `theta_c, depth_min, depth_max, depth_min, C0, C1, C2, chan_thresh, chan_depth`
 - WNDX:         `theta_c, depth_min, depth_max, C0, power, chan_thresh, chan_depth`
-- LCSD:          `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_test`
-- NSD:          `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_test`
-- NSDA:         `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_test`
-- NASD:         `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_test`
+- LCSD:          `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_mode`
+- NSD:          `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_mode`
+- NSDA:         `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_mode`
+- NASD:         `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_mode`
 - NDSD:         `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, num_steps`
 
 Model code,    Required input files
@@ -160,8 +160,8 @@ The following table outlines the prefixes of the output files created within the
 | `RG_trans_(trans_model)_` | `l_deriv` .true. | Grid of transport factor | NSD, NSDA, NASD |
 | `RG_Del_dotDelz_nlso_` | `l_deriv` .true. | Grid of derivative of dot product of derivative of z | NDSD |
 | `_smo` | `topoSmooth`, `soilSmooth` .true. | Suffix added on smoothed grids | All models |
-| `_hmp` | `hump_prod` .true. | Suffix added to output if humped production model was used | All models |
-| `_test` | `l_test` .true. | Suffix added to output if model run in test mode | All models |
+| `_hmp` | `hump_prod` .true. | Suffix added to output file name if humped production model was used | LCSD, NSD, NSDA, NASD, NDSD |
+| `_anl` | `l_mode` .false. | Suffix added to output file if model run in modified mode | LCSD, NSD, NSDA, NASD, NDSD |
 
 
 Suggested input parameter values for empirical models
@@ -231,7 +231,7 @@ Clastic sedimentary in a marine tropical to humid temperate setting, Ho et al. (
  
 Suggested input parameter values for process-based models
 -----------------------------------------------
-The following table displays the full ranges of parameters used in running the program successfully with the process-based models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were conducted on sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in human tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020). `l_test` is available for verifying code output against analytical solutions. The test mode ranges were obtained from Pelletier & Rasmussen (2009) from tests on soils in Pima County, Arizona.
+The following table displays the full ranges of parameters used in running the program successfully with the process-based models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were conducted on sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in human tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020). `l_mode` is available for verifying code output against analytical solutions. The original mode ranges were obtained from Pelletier & Rasmussen (2009) from tests on soils in Pima County, Arizona.
 
 | `trans_model` | `h0` (m) | `theta_c` (degrees) | `dif_ratio` | `depth_max` (m) | `depth_min` (m) | `power` |
 | ----- | ------ | ------ | ------ | ------ | ------ | ------- |
@@ -285,8 +285,8 @@ Granitoid in humid tropical setting, Tello (2020)
 | NASD | 50 - 60 | 1 - 2 | 3 |
 | NDSD | 50 - 60 | 0.1 - 0.3 | — |
 
-Test mode ranges for metamorphic and granite in temperate semi-arid Setting, Pelletier & Rasmussen (2009)
-| `trans_model` | `theta_c` (degrees) | `dif_ratio` `l_test` | `power` |
+Original mode ranges for metamorphic and granite in temperate semi-arid Setting, Pelletier & Rasmussen (2009)
+| `trans_model` | `theta_c` (degrees) | `dif_ratio` `l_mode` | `power` |
 | ----- | ------ | ------ | ------ |
 | LCSD | 30 - 60 | 1 - 5 | — |
 | NSD | 30 - 60 | 0.2 - 1 | — |
@@ -317,7 +317,7 @@ A line at the end of initialization file, *rg_in.txt*, allows the user to specif
 Sample data
 -----------
 
-An example rg_in.txt file is provided in the main directory of this repository.  It is configured to apply test-mode parameters to the NSD soil depth model.  Sample data for synthetic terrain are provided in the directory data.  The synthetic terrain is modeled on orthogonal sine waves to represent topography having concave and convex features. Output of the test mode can be compared with analytically computed values of soil depth to confirm that the program is working correctly.
+An example rg_in.txt file is provided in the main directory of this repository.  It is configured to apply test-mode parameters to the NSD soil depth model.  Sample data for synthetic terrain are provided in the directory data.  The synthetic terrain is modeled on orthogonal sine waves to represent topography having concave and convex features. Output of the original mode can be compared with analytically computed values of soil depth to confirm that the program is working correctly.
 
 Additional sample data for a small basin in dissected topography of the Oregon Coast Range are available for free download (Baum and others, 2020).  These data are stored in GEOTIFF format, but can be readily converted to ASCII grid format supported by REGOLITH using commercial or open-source GIS software.
 
@@ -335,6 +335,8 @@ Baum, R.L., Lewis, A.C., Coe, J.A., and Godt, J.W., 2020, Map and model input an
 DeRose, R.C.; Trustrum, N.A.; and Blaschke, P.M., 1991, Geomorphic change implied by regolith-slope relationships on steepland hillslopes, Taranaki, New Zealand. Catena, Vol. 18, pp. 489-514.
 
 DeRose, R.C., 1996, Relationships between slope morphology, regolith depth, and the incidence of shallow landslides in eastern Taranaki hill country: Zeitschrift für Geomorphologie, Supplementband 105, pp. 49-60.
+
+Dietrich, W.E.; Reiss, R.; Hus, M.L.; and Montgomery, D.R.; 1995, A process-based model for colluvial soil depth and shallow landsliding using digital elevation data: Hydrological Processes Vol. 9, pp. 383–400. 
 
 Ho, J.-Y.; Lee, K.T.; Chang, T.-C.; Wang, Z.-Y.; and Liao,
 Y.-H., 2012, Influences of spatial distribution of soil thickness on shallow landslide prediction: Engineering Geology, Vol. 124, pp. 38–46.
