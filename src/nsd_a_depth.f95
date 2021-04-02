@@ -3,7 +3,7 @@
 subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_thresh,&
   & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
   & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-  & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
+  & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power)
   implicit none
 ! LOCAL VARIABLES
   integer::i
@@ -18,7 +18,7 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
   real, intent(inout):: unused(imax)
   real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
 	real (kind = 8),intent(in):: nodat,celsiz !
-	logical, intent(in):: hump_prod(max_zones), l_test
+	logical, intent(in):: hump_prod(max_zones), l_mode
   write(*,*) 'Entering subroutine nsd_a_depth'
   do i=1,imax
     if(abs(nl_slope_fac(i))<=tis) cycle
@@ -27,7 +27,7 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
   end do
   call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,no_data_int)
   call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,no_data_int)
-  if(l_test) then ! Test mode to compare against analytical solutions
+  if(l_mode) then ! Original mode consistent with analytical solutions
     do i=1,imax
       trans_nsd=d_trans_x_dx(i)+d_trans_y_dy(i)
       unused(i) = trans_nsd
@@ -38,7 +38,7 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
       if (trans_nsd*aexpn < 0.) cycle ! 3/4/2019 RLB ! if (trans_nsd*aexpn > 0.) cycle 
       if (hump_prod(zo(i))) then
         h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) ! h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn))
-        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_test)
+        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_mode)
       else
        ! h = h0*sec_theta*Log(dif_ratio*sec_theta/(area*divgradz/nl_slope_fac)) From Pelletier & Rasmussen (2009)
         soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) ! soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn))
@@ -46,7 +46,7 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
       if(soil_depth(i)<depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
     end do
-  else ! Production mode
+  else ! Modified mode
     do i=1,imax
       if(nl_slope_fac(i)<=tis) cycle
       trans_nsd=d_trans_x_dx(i)+d_trans_y_dy(i)
@@ -57,7 +57,7 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
       if (abs(trans_nsd*aexpn) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       if (hump_prod(zo(i))) then
         h1=h0(zo(i))*sec_theta(i)*log(trans_nsd*aexpn/(dif_ratio(zo(i))*sec_theta(i)))
-        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_test)
+        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_mode)
       else
         soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_nsd*aexpn/(dif_ratio(zo(i))*sec_theta(i))) 
       end if

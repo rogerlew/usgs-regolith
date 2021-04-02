@@ -1,4 +1,4 @@
-subroutine h_solve(a,b,c,h0,h1,h,l_test)
+subroutine h_solve(a,b,c,h0,h1,h,l_mode)
 !  Solver for humped soil production model (see Peletier & Rasmussen, 2009)
 !  Code updated 3/31/2020, RLB
   implicit none
@@ -10,14 +10,14 @@ subroutine h_solve(a,b,c,h0,h1,h,l_test)
   real, intent(in):: a,b,h0,h1
   real, intent(out):: h
   real, intent(in):: c
-  logical :: l_test
+  logical :: l_mode
 !
   mmax=20;eps=0.001;x0=eps 
   hmax=30. 
   hlb=0.01
   hub=0.0
 ! Bracket the range in which the depth function changes sign.  
-  if(l_test) then ! test mode
+  if(l_mode) then ! Original mode
     if((h0/hlb)*c/(b*a) >0.) then !(-(h0/hlb)*c/(b*a) >0.)
       fl=hlb-h0*a*log((hlb/h0)*(b*a)/c) ! fl=hlb-h0*a*log(-(hlb/h0)*(b*a)/c)
     else
@@ -34,7 +34,7 @@ subroutine h_solve(a,b,c,h0,h1,h,l_test)
       endif
     if(fl*fu<0.) exit ! The function changes sign between hlb and hub
     end do
-  else ! production mode 
+  else ! Modified mode 
     if((h0/hlb)*c/(b*a) >0.) then
       fl=hlb-h0*a*log((h0/hlb)*c/(b*a)) 
     else
@@ -66,6 +66,6 @@ subroutine h_solve(a,b,c,h0,h1,h,l_test)
     dx=hlb-hub
   end if
 ! Solve for depth by bisection  
-  call dbisect(mmax,eps,a,b,c,h0,htb,dx,x0,itmax,l_test)
+  call dbisect(mmax,eps,a,b,c,h0,htb,dx,x0,itmax,l_mode)
   h=htb; if (h>=hmax) h=0.
 end subroutine h_solve 

@@ -1,4 +1,4 @@
-subroutine dbisect(mmax,eps,a,b,c,h0,rtb,dx,x0,itmax,l_test) 
+subroutine dbisect(mmax,eps,a,b,c,h0,rtb,dx,x0,itmax,l_mode) 
 ! By Rex L. Baum, 2/6/2015
 ! Formula updated 3/31/2020, RLB
 ! Uses bisection method as described in Press and others, 1986, p. 246-247.
@@ -11,10 +11,10 @@ subroutine dbisect(mmax,eps,a,b,c,h0,rtb,dx,x0,itmax,l_test)
   real:: a,b,c,h0
   real (kind = 8):: eps,x0 ! , c
   real (kind = 8):: rtb,dx, tol
-  logical:: l_test
+  logical:: l_mode
   itmax=0
   tol=1.0e-06
-  if(l_test) then ! test mode
+  if(l_mode) then ! Original mode
     do m=1,mmax
       dx=dx/2.
       x0=dx+rtb
@@ -27,7 +27,7 @@ subroutine dbisect(mmax,eps,a,b,c,h0,rtb,dx,x0,itmax,l_test)
       end if 
     end do 
     return
-  else ! Production mode
+  else ! Modified mode
     do m=1,mmax
       dx=dx/2.
       x0=dx+rtb

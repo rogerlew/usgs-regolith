@@ -8,13 +8,14 @@ contains
         & num_zones,max_zones,num_steps,hump_prod,theta_c_deg,suffix,folder,&
         & elevfil,slopefil,flo_accfil,pv_curvfil,ndxfil,zonfil,heading,lasc,&
         & h0,sc,dif_ratio,depth_max,depth_min,C0,C1,C2,zon,vrsn,bldate,date,time,&
-        & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_test,power)
+        & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_mode,power)
   implicit none
 ! LOCAL VARIABLES
   integer:: linct ,i, j, iz
   character (len=400):: msg(4)
   character (len=255):: title
   character (len=31):: scratch
+  character (len=8):: model_dscrp
   character (len=4):: valid_model_id(13), model_type, lin_num
   logical:: ans, reset_flag, id_valid, out_of_range
 ! FORMAL ARGUMENTS 
@@ -26,7 +27,7 @@ contains
   real, intent(out):: chan_thresh,chan_depth,power ! threshold upslope contributing area for channels
   real(kind = 8),intent(in)::dg2rad
   logical, allocatable, intent(out):: hump_prod(:)  
-  logical, intent(out):: lasc, l_deriv, l_test
+  logical, intent(out):: lasc, l_deriv, l_mode
   logical, intent(out):: topoSmooth,soilSmooth
   character (*), intent(in):: vrsn,bldate,date,time
   character (*), intent(out):: trans_model,suffix,folder,heading(18)
@@ -52,10 +53,10 @@ contains
 ! Project title  
     read (uini,'(a)',err=202) heading(1); linct=linct+1
     read (uini,'(a)',err=202) title; linct=linct+1
-! Model Identification code, Test mode?
+! Model Identification code, Original mode (.true.) or Modified mode (.false.)?
     read (uini,'(a)',err=202) heading(2); linct=linct+1
-    read (uini,*,err=202) trans_model, l_test; linct=linct+1
-!    write(*,*) trans_model, l_test
+    read (uini,*,err=202) trans_model, l_mode; linct=linct+1
+!    write(*,*) trans_model, l_mode
 ! Test for valid model ID code
   id_valid=.false.
   do i=1,13
@@ -131,7 +132,7 @@ contains
     read (uini,*,err=202) num_steps
     linct=linct+1
     if(trans_model == 'NDSD') then
-      l_test = .false. ! Test mode NOT available for NDSD model
+      l_mode = .true. ! Modified mode NOT available for NDSD model
       if(num_steps<1 .or. num_steps>10000) then 
         write(*,*) ''
         write(*,*) 'Number of steps for NDSD model out of permissible range, 1 - 10,000'
@@ -235,7 +236,7 @@ contains
     else
       msg(2) = ''
     end if
-    if (l_test) then ! Allow negative minimum depth in test mode
+    if (l_mode) then ! Allow negative minimum depth in Original mode
       if(depth_max (iz) < 0. .or. depth_min(iz) > depth_max(iz))then
         out_of_range = .true.
         write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
@@ -331,7 +332,17 @@ contains
   if(ans) then
     suffix=adjustl(suffix)
     trans_model=adjustl(trans_model)
-    outfil=trim(folder)//'RG_Log_'//trim(trans_model)//'_'//trim(suffix)//'.txt'
+!    outfil=trim(folder)//'RG_Log_'//trim(trans_model)//'_'//trim(suffix)//'.txt'
+    if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then
+      if(l_mode) then
+        model_dscrp=trim(trans_model)//'_anl' ! Original mode based on analytic formula
+      else
+        model_dscrp=trim(trans_model)//'_mdf' ! Modified mode
+      endif
+      outfil=trim(folder)//'RG_Log_'//trim(model_dscrp)//'_'//trim(suffix)//'.txt'
+    else
+      outfil=trim(folder)//'RG_Log_'//trim(trans_model)//'_'//trim(suffix)//'.txt'
+    end if
     outfil=adjustl(outfil)
     open (ulog,file=trim(outfil),status='unknown',err=211)
   else
@@ -359,7 +370,7 @@ contains
   heading(2)=adjustl(heading(2))
   trans_model=adjustl(trans_model)
   write (ulog,*) trim(heading(2))
-  write (ulog,*) trim(trans_model), l_test
+  write (ulog,*) trim(trans_model), l_mode
   heading(3)=adjustl(heading(3))
   write (ulog,*) trim(heading(3))
   write (ulog,*) chan_thresh,chan_depth

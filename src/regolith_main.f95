@@ -2,7 +2,7 @@
 ! by Rex L. Baum, U.S. Geological Survey, January 2015
 ! VARIABLE DEFINITIONS
 ! celsiz -- grid cell spacing/width
-! chan_thresh -- threshold value of upslope contributing for channels
+! chan_thresh -- threshold value of upslope contributing area for channels
 ! chan_depth -- mean depth of alluvial deposits in steep channels (channel gradient > sc/5.)
 ! col -- number of columns in grid
 ! dif_ratio -- diffusivity ratio, (ro_b*P0)/(ro_s*D), where D is soil diffusivity, 
@@ -11,8 +11,8 @@
 ! grd -- total number of grid cells (col*row)
 ! imax --  number of (non-null) grid cells
 ! h0 -- characteristic soil depth, typically 0.5 m.
-! hump_prod -- logical variable true if humped exponential production function used, 
-!              false if ordinary exponential function used
+! hump_prod -- logical variable true if humped soil exponential production function used, 
+!              false if ordinary exponential soil production function is used.
 ! init -- name of initialization file (default name is "rg_in.txt")
 ! no_data_64 -- no-data value (64-bit/ 8-byte real) in ASCII grids
 ! no_data_32 -- no-data value (32-bit/ 4-byte real) in ASCII grids
@@ -27,7 +27,7 @@
 ! tis -- the smallest value that can be represented by a single precision variable.
 ! trans_model-- sediment transport model (or empirical soil depth model) used
 !
-! contrib_area() -- upslope contributing area per unit area (ESRI "Flow Accumulation" from ArcGIS).
+! contrib_area(:) -- upslope contributing area per unit area (ESRI "Flow Accumulation" from ArcGIS).
 !                   multiply by celsiz^2 to obtain total upslope contributing area.
 ! cell_row(:) -- row number of each grid cell--reference from upper left corner
 ! cell_column(:) -- column number of each grid cell--reference from upper left corner
@@ -50,7 +50,7 @@
 ! filtered(:) -- smoothed array output by subroutine gauss_approx()
 ! indexed_cell_number(:) -- cell number, indexed from highest to lowest
 ! n_points -- an odd integer, greater than 1, that determines the width of the running average used in the smoothing algorithm, gauss_approx
-! pf1 -- grid stored as 1-d array, used to track locations of no-data values
+! pf1(:) -- grid stored as 1-d array, used to track locations of no-data values
 ! power -- exponent of DRS2 polynomial, or upslope area in NASD, NSDA, and WNDX models
 ! soil_depth -- computed depth of soil, h
 ! sec_theta -- 1/cos(slope angle) = sqrt(1+ |Del(z)|^2)
@@ -66,7 +66,7 @@
 program regolith
   use read_inputs
   implicit none
-  integer, parameter:: ulen=30
+  integer, parameter:: ulen=30 ! length of array u(:) for file unit numbers
   integer:: imax,row,col, chek_row, chek_col, chek_celsiz, chek_imax, zo_min
   integer grd,i,j,j1,mnd,imx1,nwf !,patlen
   integer:: no_data_int,sctr,num_steps, num_zones, max_zones, n_points ! Added n_points 8/20/2020 RLB
@@ -91,17 +91,17 @@ program regolith
   real(kind = 8)::pi,param(6),parami(6),ti,dg2rad
   real (kind = 8):: no_data_64,celsiz, chek_nodat
   logical::lpvc,ans,lasc,lnfil 
-  logical:: topoSmooth,soilSmooth,hump_prod_any,l_deriv, l_test
-  logical, allocatable:: hump_prod(:) 
+  logical:: topoSmooth,soilSmooth,hump_prod_any,l_deriv, l_mode
+  logical, allocatable:: hump_prod(:) ! Switches between exponential (.false.) or humped soil production model (.true.)
   character (len=255):: outfil,init !,infil
   character (len=255):: elevfil, slopefil, flo_accfil, pv_curvfil, ndxfil, zonfil
   character (len=255):: heading(18) !,size_heading
   character (len=224):: folder ,elfoldr
-  character (len=31):: scratch
-  character (len=16):: suffix ! Length increased from 8 characters
-  character (len=14):: header(6)
+  character (len=31):: scratch ! Holder for intermediate output strings
+  character (len=16):: suffix ! Alphanumeric code appended to output file names to identify files from a particular model run.
+  character (len=14):: header(6) ! Labels from the first six lines of ASCII grid files.
   character (len=14):: elevSmo_fil='RG_elev_Smooth'
-  character (len=11):: bldate
+  character (len=11):: bldate ! date of current version 
   character (len=10):: time
   character (len=8):: date
   character (len=8):: slopgs_fil='RG_slope' ! output file for computed ground-surface slope angle grid
@@ -113,11 +113,11 @@ program regolith
   call date_and_time(date,time)
   no_data_32=-9999.
   u=(/11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,&
-    &31,32,33,34,35,36,37,38,39,40/)
+    &31,32,33,34,35,36,37,38,39,40/) ! Unit numbers for input and output files.
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02t'; bldate='31 Mar 2021'
+  vrsn='0.3.02u'; bldate='02 Apr 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -127,7 +127,7 @@ program regolith
      & num_zones,max_zones,num_steps,hump_prod,theta_c_deg,suffix,folder,&
      & elevfil,slopefil,flo_accfil,pv_curvfil,ndxfil,zonfil,heading,lasc,&
      & h0,sc,dif_ratio,depth_max,depth_min,C0,C1,C2,zon,vrsn,bldate,date,time,&
-     & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_test,power)
+     & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_mode,power)
   allocate(theta_c_rad(max_zones))
   theta_c_rad=theta_c_deg*dg2rad
 ! determine grid size parameters RLB 4/18/2011
@@ -494,35 +494,35 @@ program regolith
     case('WNDX'); call wetness_ndx(u(1),imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,&
       & contrib_area,slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power) ! Modified wetness index 
     case('LCSD') ! Classic curvature-based formula
-      if (l_deriv .or. l_test) then
+      if (l_deriv .or. l_mode) then
         allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
         d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
         call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
            & celsiz,celsiz,no_data_64,no_data_int)
       end if
-      if(l_test) then ! Pass 2nd derivatives from laplacian subroutine.
+      if(l_mode) then ! Pass 2nd derivatives from laplacian subroutine.
         call lcsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
         & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,slope_rad,&
         & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-        & unused,trans_x,trans_y,d2zdx2gs,d2zdy2gs,zo,max_zones,l_test)
+        & unused,trans_x,trans_y,d2zdx2gs,d2zdy2gs,zo,max_zones,l_mode)
       else ! Compute 2nd derivatives from 1st derivatives for greater smoothing.
         call lcsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
         & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,slope_rad,&
         & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-        & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test)
+        & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode)
       endif
     case('NSD');  call nsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
       & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test)
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode)
     case('NSDA'); call nsd_a_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
       & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power)
     case('NASD'); call nasd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
       & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power)
     case('NDSD') 
       allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
       d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
@@ -576,7 +576,13 @@ program regolith
   end do
   if(hump_prod_any) scratch=trim(scratch)//'hmp_'
   if(soilSmooth) scratch=trim(scratch)//'smo_'
-  if(l_test) scratch=trim(scratch)//'test_'
+  if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then
+    if(l_mode) then
+      scratch=trim(scratch)//'anl_' ! Original mode based on analytic formula
+    else
+      scratch=trim(scratch)//'mdf_' ! Modified mode
+    endif
+  end if
   outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
   call ssvgrd(tfg,imax,pf1,row,col,u(9),no_data_32,param,u(1),&
    & outfil,ti,header)

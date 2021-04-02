@@ -3,7 +3,7 @@
 subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_thresh,&
   & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
   & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-  & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_test,power)
+  & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power)
   implicit none
 ! LOCAL VARIABLES
   integer::i,ctr,ctr1,neg_ctr,cycl_ctr
@@ -19,7 +19,7 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
   real, intent(inout):: unused(imax)
   real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
 	real (kind = 8),intent(in):: nodat,celsiz !
-	logical, intent(in):: hump_prod(max_zones), l_test
+	logical, intent(in):: hump_prod(max_zones), l_mode
   write(*,*) 'Entering subroutine nasd_depth'
   ctr=0; ctr1=0
   do i=1,imax
@@ -39,7 +39,7 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
   call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,no_data_int)
   call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,no_data_int)
   ctr=0;neg_ctr=0;cycl_ctr=0
-  if(l_test) then  ! Test mode to compare against analytical solutions
+  if(l_mode) then  ! Original mode consistent with analytical solutions
     do i=1,imax
       trans_nasd=d_trans_x_dx(i)+d_trans_y_dy(i)
       unused(i) = trans_nasd
@@ -48,7 +48,7 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       cycl_ctr=cycl_ctr+1
       if (hump_prod(zo(i))) then
         h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_nasd) ! For testing, 8/4/2020 h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nasd) 
-        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_test)
+        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_mode)
       else
       ! h = h0*sec_theta*Log(-dif_ratio*sec_theta/(area*divgradz/nl_slope_fac)) From Pelletier & Rasmussen (2009)
         soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_nasd) ! For testing, 8/4/2020 soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_nasd) 
@@ -60,7 +60,7 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
         neg_ctr=neg_ctr+1
       end if
     end do
-  else ! Production mode
+  else ! Modified mode
     do i=1,imax
       if(nl_slope_fac(i)<=tis) cycle
       trans_nasd=d_trans_x_dx(i)+d_trans_y_dy(i)
@@ -70,7 +70,7 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       cycl_ctr=cycl_ctr+1
       if (hump_prod(zo(i))) then
         h1=h0(zo(i))*sec_theta(i)*log(trans_nasd/(dif_ratio(zo(i))*sec_theta(i)))
-        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_test)
+        call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nasd,h0(zo(i)),h1,soil_depth(i),l_mode)
       else
      ! h = h0*sec_theta*Log((area*divgradz/nl_slope_fac)/(dif_ratio*sec_theta)) From Pelletier & Rasmussen (2009)
         soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_nasd/(dif_ratio(zo(i))*sec_theta(i)))
