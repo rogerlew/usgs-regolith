@@ -1,6 +1,6 @@
 #Program regolith, v.1.0, to estimate regolith thickness from topography
 Synthetic topography based on orthogonal sine waves
-# Transport model (trans_model) use codes, 'DRS1', 'DRS2', 'DRS3', 'WNDX', 'NSD', 'NASD', 'NSDA', 'LCSD', or 'NDSD'; Test mode? 
+# Transport model (trans_model) use codes, 'DRS1', 'DRS2', 'DRS3', 'WNDX', 'NSD', 'NASD', 'NSDA', 'LCSD', or 'NDSD'; Original mode? 
 LCSD, .true.
 # Channel parameters: chan_thresh, chan_depth
 1500000., 0.5
