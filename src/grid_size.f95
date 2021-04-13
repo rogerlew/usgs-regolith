@@ -2,8 +2,8 @@
   subroutine grid_size(elevfil,elfoldr,init, data_cells,row,col,nwf,ulog,usiz,uelev,&
    & celsiz,nodat)
 ! FORMAL ARGUMENTS
-  character(*), intent(in):: elevfil,init
-  character(*), intent(out):: elfoldr
+  character(len=255), intent(in):: elevfil,init
+  character(len=224), intent(out):: elfoldr
   integer, intent(in):: ulog,usiz,uelev !uelev=u(12)
   integer, intent(out):: data_cells,row,col,nwf
   real(kind = 8), intent(inout):: celsiz, nodat
@@ -19,9 +19,9 @@
   
   patlen=scan(elevfil,'/\',.true.) ! find end of folder name
   elfoldr=elevfil(1:patlen) ! path to elevation grid
+  elfoldr=adjustl(elfoldr)
   ans=.false.
   do i=1,3 ! check for presence of grid size file
-    elfoldr=adjustl(elfoldr)
     infil=trim(elfoldr)//pid(i)//'grid_size.txt'
     infil=adjustl(infil)
     inquire (file=trim(infil),exist=ans)
@@ -49,6 +49,11 @@
       write (usiz,*) data_cells,row,col,nwf
       write (usiz,*) ''
       close (usiz)
+      write (ulog,*) 'Grid size parameters from ', trim(infil)
+      write (ulog,*) 'Created new size file, ', trim(outfil)
+      write (ulog,*) 'data_cells      row      col      nwf'
+      write (ulog,*) data_cells,row,col,nwf
+      return
     else
       write(ulog,*) 'Elevation grid ', trim(infil), ' was not found'
       write(ulog,*) 'Edit path name of elevation grid in ', trim(init),&
@@ -60,8 +65,8 @@
       stop 'grid_size.f95, line 60'
     endif
   end if
-  write(ulog,*) 'Grid size parameters from ', trim(infil)
-  write (ulog,*) size_heading
+  write (ulog,*) 'Grid size parameters from ', trim(infil)
+  write (ulog,*) trim(adjustl(size_heading))
   write (ulog,*) data_cells,row,col,nwf
   return
 ! Error reporting

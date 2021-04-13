@@ -11,9 +11,10 @@ contains
         & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_mode,power)
   implicit none
 ! LOCAL VARIABLES
-  integer:: linct ,i, j, iz
+  integer:: linct ,i, j, iz, patlen
   character (len=400):: msg(4)
   character (len=255):: title
+  character(len=224):: elfoldr
   character (len=31):: scratch
   character (len=8):: model_dscrp
   character (len=4):: valid_model_id(13), model_type, lin_num
@@ -29,11 +30,16 @@ contains
   logical, allocatable, intent(out):: hump_prod(:)  
   logical, intent(out):: lasc, l_deriv, l_mode
   logical, intent(out):: topoSmooth,soilSmooth
-  character (*), intent(in):: vrsn,bldate,date,time
-  character (*), intent(out):: trans_model,suffix,folder,heading(18)
-  character (*), intent(out):: init,elevfil,slopefil,flo_accfil,pv_curvfil,ndxfil,zonfil 
-  character (*), intent(inout):: outfil
-  init='rg_in.txt'
+  character (len=4), intent(out):: trans_model
+  character (len=7), intent(in):: vrsn
+  character (len=8), intent(in):: date
+  character (len=10), intent(in):: time
+  character (len=11), intent(in):: bldate
+  character (len=16), intent(out):: suffix
+  character (len=224), intent(out):: folder
+  character (len=255), intent(out):: init,elevfil,slopefil,flo_accfil,pv_curvfil,ndxfil,zonfil 
+  character (len=255), intent(inout):: outfil,heading(18)
+  init='rg_in.txt'; init = adjustl(init)
   ans=.false.; reset_flag=.false.
   valid_model_id=(/'DRS1','DRS2','DRS3','LCSD','NASD','NDSD','NSD ','NSDA',&
                 &'WNDX','ESD ','ECSD','PSD ','LASD'/)
@@ -45,7 +51,7 @@ contains
     write (*,*) 'Cannot locate default initialization file, <rg_in.txt>'
     write (*,*) 'Type name of initialization file and'
     write (*,*) 'press RETURN to continue'
-    read (*,'(a)') init
+    read (*,'(a)') init; init = adjustl(init)
     open (uini,file=trim(init),status='old',err=201)
   end if
 ! Read contents of initialization file.
@@ -56,6 +62,7 @@ contains
 ! Model Identification code, Original mode (.true.) or Modified mode (.false.)?
     read (uini,'(a)',err=202) heading(2); linct=linct+1
     read (uini,*,err=202) trans_model, l_mode; linct=linct+1
+    trans_model = adjustl(trans_model)
 !    write(*,*) trans_model, l_mode
 ! Test for valid model ID code
   id_valid=.false.
@@ -131,7 +138,7 @@ contains
     read (uini,'(a)',err=202) heading(5); linct=linct+1
     read (uini,*,err=202) num_steps
     linct=linct+1
-    if(trans_model == 'NDSD') then
+    if(trim(trans_model) == 'NDSD') then
       l_mode = .true. ! Modified mode NOT available for NDSD model
       if(num_steps<1 .or. num_steps>10000) then 
         write(*,*) ''
@@ -325,10 +332,12 @@ contains
 !-----------------------------------------    
   close(uini)
 !***********************************************
-! Open log file in output folder and write copy of initialization file.
-  folder = adjustl(folder)
+! Open log file in folder occupied by elevfil and write copy of initialization file.
   ans = .false.
-  inquire(file=trim(folder), exist=ans)
+  patlen=scan(elevfil,'/\',.true.) ! find end of folder name
+  elfoldr=elevfil(1:patlen) ! path to elevation grid
+  elfoldr=adjustl(elfoldr)
+  inquire(file=trim(adjustl(elevfil)), exist=ans)
   if(ans) then
     suffix=adjustl(suffix)
     trans_model=adjustl(trans_model)
@@ -339,27 +348,25 @@ contains
       else
         model_dscrp=trim(trans_model)//'_mdf' ! Modified mode
       endif
-      outfil=trim(folder)//'RG_Log_'//trim(model_dscrp)//'_'//trim(suffix)//'.txt'
+      outfil=trim(elfoldr)//'RG_Log_'//trim(model_dscrp)//'_'//trim(suffix)//'.txt'
     else
-      outfil=trim(folder)//'RG_Log_'//trim(trans_model)//'_'//trim(suffix)//'.txt'
+      outfil=trim(elfoldr)//'RG_Log_'//trim(trans_model)//'_'//trim(suffix)//'.txt'
     end if
     outfil=adjustl(outfil)
     open (ulog,file=trim(outfil),status='unknown',err=211)
   else
     write (*,*) ''
-    write(*,*) '*###* Output directory, "', trim(folder), '" was not found *###*'
-    write(*,*) 'Create directory ', trim(folder)
+    write(*,*) '*###* Output directory, "', trim(elfoldr), '" was not found *###*'
+    write(*,*) 'Create directory ', trim(elfoldr)
     write(*,*) 'or edit ', trim(init), ' to correct the directory path name'
-    write(*,*) '(input variable "folder"), then restart program.'
-    stop 'regolini.f95, line 331'
+    write(*,*) '(input variable "elevfil"), then restart program.'
+    stop 'regolini.f95, line 340'
   end if
-!   write (ulog,*) 'initialization file -->',init
-!   write (ulog,*) '-- LISTING OF INITIALIZATION FILE --'  
   write (ulog,*) ''
   write (ulog,*) 'Starting Regolith ', vrsn,' ',bldate
   write (ulog,*) 'Date ',date(5:6),'/',date(7:8),'/',date(1:4)
   write (ulog,*) 'Time ',time(1:2),':',time(3:4),':',time(5:6)
-  write (ulog,*) 'initialization file --> ',init
+  write (ulog,*) 'initialization file --> ', trim(init)
   write (ulog,*) '-- LISTING OF INITIALIZATION FILE --'  
 ! write copy of data to log file
   heading(1)=adjustl(heading(1))

@@ -8,7 +8,7 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
   implicit none
 ! LOCAL VARIABLES
 !!	integer,parameter:: double=kind(1d0)
-  integer:: i
+  integer:: i, chan_ctr
   real::temp0,soil_depth_min,soil_depth_max
 !!  real(kind = 8)::power
 ! FORMAL ARGUMENTS
@@ -19,9 +19,9 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
   real, intent(in):: slope(imax),slope_rad(imax),contrib_area(imax),plan_view_curv(imax)
   real, intent(inout):: soil_depth(imax)
   real(kind = 8),intent(in)::dg2rad
-  character(*), intent(in)::trans_model
+  character(len=4), intent(in)::trans_model
   write(*,*) 'Entering subroutine DeRose'
-!!  power=3.
+  chan_ctr=0
 !!  write(*,*) 'i, temp0 '
   select case(trans_model)
   case('DRS2')
@@ -96,6 +96,7 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
       if(contrib_area(i)>chan_thresh) then 
          if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
+              chan_ctr = chan_ctr + 1
          end if
       end if
     end do
@@ -106,5 +107,6 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
   write(*,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
   write(ulog,*) 'Computed depth using modified DeRose formula'
   write(ulog,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
+  write(ulog,*) 'Channel grid cells where depth changed, grid-cell threshold: ', chan_ctr, chan_thresh
   return 
 end subroutine derose

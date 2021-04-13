@@ -6,7 +6,7 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
   & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode)
   implicit none
 ! LOCAL VARIABLES
-  integer:: i
+  integer:: i, chan_ctr
   real ::trans_lcsd,soil_depth_min,soil_depth_max 
   real::h1 
 ! FORMAL ARGUMENTS
@@ -25,17 +25,17 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
     trans_x(i)=dzdxgs(i) ! x-component of transport factor
     trans_y(i)=dzdygs(i) ! y-component of transport factor
   end do
+  chan_ctr=0
   if(l_mode) then ! Original mode consistent with analytical solutionss
     do i=1,imax
       trans_lcsd=d_trans_x_dx(i)+d_trans_y_dy(i) ! 2nd derivatives passed directly from main program.
-      if (trans_lcsd < 0.) cycle ! 7/15/2020 RLB if (trans_lcsd > 0.) cycle 
+      if (trans_lcsd < 0.) cycle ! Avoid negative argument of log() 
       if (abs(trans_lcsd) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_lcsd) ! h1=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_lcsd)
+        h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_lcsd) 
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_lcsd,h0(zo(i)),h1,soil_depth(i),l_mode)
       else
-       ! h = h0*sec_theta*Log(dif_ratio*sec_theta/divgradz) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_lcsd) ! soil_depth(i)=h0(zo(i))*sec_theta(i)*log(-(dif_ratio(zo(i))*sec_theta(i))/trans_lcsd)
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_lcsd) 
       end if
       if(soil_depth(i) < depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i)>depth_max(zo(i)) ) soil_depth(i)=depth_max(zo(i))
@@ -45,14 +45,13 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
     call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,no_data_int)
     do i=1,imax
       trans_lcsd=d_trans_x_dx(i)+d_trans_y_dy(i)
-      if (trans_lcsd < 0.) trans_lcsd=-trans_lcsd ! 3/4/2019 RLB
+      if (trans_lcsd < 0.) trans_lcsd=-trans_lcsd ! Estimate soil depth for positive and negatively curved ground
       if (abs(trans_lcsd) <= tis) cycle 
       if (hump_prod(zo(i))) then
         h1=h0(zo(i))*sec_theta(i)*log(trans_lcsd/(dif_ratio(zo(i))*sec_theta(i)))
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_lcsd,h0(zo(i)),h1,soil_depth(i),l_mode)
       else
-      ! h = h0*sec_theta*Log(divgradz/(dif_ratio*sec_theta)) From Pelletier & Rasmussen (2009)
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_lcsd)  !!        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_lcsd/(dif_ratio(zo(i))*sec_theta(i)))
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_lcsd) 
       end if
       if(soil_depth(i) < depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i) > depth_max(zo(i)) ) soil_depth(i)=depth_max(zo(i))
@@ -60,6 +59,7 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       if(contrib_area(i)>chan_thresh) then 
          if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
+              chan_ctr = chan_ctr + 1
          end if
       end if
   end do
@@ -74,5 +74,6 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
   write(ulog,*) 'Range trans_y', minval(trans_y), maxval(trans_y)
   write(ulog,*) 'Range d_trans_x_dx', minval(d_trans_x_dx), maxval(d_trans_x_dx)
   write(ulog,*) 'Range d_trans_y_dy', minval(d_trans_y_dy), maxval(d_trans_y_dy)
+  write(ulog,*) 'Channel grid cells where depth changed, grid-cell threshold: ', chan_ctr, chan_thresh
   return 
 end subroutine lcsd_depth

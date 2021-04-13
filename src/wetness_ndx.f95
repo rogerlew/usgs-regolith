@@ -8,7 +8,7 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contr
   & slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power)
   implicit none
 ! LOCAL VARIABLES
-  integer:: i
+  integer:: i, chan_ctr
   real::soil_depth_min,soil_depth_max
   real(kind = 8)::w0,temp0 
 ! FORMAL ARGUMENTS
@@ -19,7 +19,7 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contr
   real, intent(inout)::soil_depth(imax)
   real(kind = 8),intent(in)::dg2rad
   write(*,*) 'Entering subroutine wetness_ndx'
-!!  power=2.
+  chan_ctr=0
   write (*,*) 'Exponent of upslope contributing area',power 
   if (power == 1.0) then ! conventional wetness index
     do i=1,imax
@@ -57,7 +57,8 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contr
         if(contrib_area(i)>chan_thresh) then 
            if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
               if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
-           end if
+               chan_ctr = chan_ctr + 1
+          end if
         end if
       else 
         soil_depth(i)=depth_min(zo(i))
@@ -71,5 +72,6 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contr
   write(ulog,*) 'Computed depth using modified wetness index'
   write(ulog,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
   write(ulog,*) 'Exponent of upslope contributing area',power 
-  return 
+  write(ulog,*) 'Channel grid cells where depth changed, grid-cell threshold: ', chan_ctr, chan_thresh
+ return 
 end subroutine wetness_ndx

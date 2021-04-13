@@ -1,13 +1,14 @@
 ! Procedure to compute soil depth based on NDSD transport model (Pelletier & Rasmussen, 2009)
 ! 25 May 2017, RLB, Latest revision 13 Aug 2020 (removed nds2_depth)
-  subroutine ndsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cell_row,cell_column,&
-     & indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,dzdygs,del2gs,&
-     & nl_slope_fac,sec_theta,soil_depth,num_steps,chan_thresh,chan_depth,&
-     & contrib_area,theta_c_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-     & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones)
+  subroutine ndsd_depth(ulog,imax,ncol,nrow,grd,celsiz,no_data_64,no_data_int,&
+     & cell_row,cell_column,indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,&
+     & dzdygs,del2gs,nl_slope_fac,sec_theta,soil_depth,num_steps,chan_thresh,&
+     & chan_depth,contrib_area,theta_c_rad,slope_rad,hump_prod,h0,dif_ratio,&
+     & depth_max,depth_min,tis,unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,&
+     & zo,max_zones)
   implicit none
 ! LOCAL VARIABLES
-  integer::i,i0,j0,l,iup,jup,m,n 
+  integer::i,i0,j0,l,iup,jup,m,n, chan_ctr
   integer::ileft,iright,jnorth,jsouth,iup_cn,jup_cn
   integer::ctr(4),maxd(imax)
   real(kind = 8)::n100,imax_dble
@@ -16,34 +17,35 @@
   real::h1,hmin,lhs,rhs,soil_depth_min,soil_depth_max,num_steps_flt 
   logical edge(4)
 ! FORMAL ARGUMENTS 
-  integer,intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cell_row(imax),cell_column(imax)
-  integer,intent(in)::indexed_cell_number(imax),elev_index_lkup(imax),cta(ncol,nrow)
-  integer,intent(in)::num_steps,max_zones,zo(imax)
-	real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis
-	real, intent(in):: depth_max(max_zones),depth_min(max_zones),theta_c_rad(max_zones)
-  real, intent(in)::pf1(grd)
-  real, intent(in):: chan_thresh,chan_depth,contrib_area(imax),slope_rad(imax)
-  real, intent(in):: dzdxgs(imax),dzdygs(imax),del2gs(imax),nl_slope_fac(imax),sec_theta(imax)
-  real, intent(inout)::soil_depth(imax)
-  real, intent(inout):: unused(imax)
-  real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
-	real (kind = 8),intent(in):: nodat,celsiz !
+  integer,intent(in):: ulog, imax, ncol, nrow, grd, no_data_int
+  integer,intent(in):: cell_row(imax), cell_column(imax)
+  integer,intent(in):: indexed_cell_number(imax), elev_index_lkup(imax), cta(ncol,nrow)
+  integer,intent(in):: num_steps, max_zones, zo(imax)
+	real, intent(in):: h0(max_zones), dif_ratio(max_zones), tis
+	real, intent(in):: depth_max(max_zones), depth_min(max_zones), theta_c_rad(max_zones)
+  real, intent(in):: pf1(grd), chan_thresh,chan_depth
+  real, intent(in):: contrib_area(imax), slope_rad(imax), sec_theta(imax)
+  real, intent(in):: dzdxgs(imax), dzdygs(imax), del2gs(imax), nl_slope_fac(imax)
+  real, intent(inout):: soil_depth(imax), unused(imax)
+  real, intent(inout):: trans_x(imax), trans_y(imax)
+  real, intent(inout):: d_trans_x_dx(imax), d_trans_y_dy(imax)
+	real (kind = 8),intent(in):: no_data_64,celsiz !
 	logical:: hump_prod(max_zones) 
   write(*,*) 'Entering subroutine ndsd_depth'
 ! initialize local arrays  
   large=huge(h1)
   do i=1,imax
-    if(abs(nl_slope_fac(i))<=tis) cycle
+    if(abs(nl_slope_fac(i))<=tis) cycle ! Avoid division by zero
     trans_x(i)=abs(dzdxgs(i))/nl_slope_fac(i) ! x-component of transport factor
     trans_y(i)=abs(dzdygs(i))/nl_slope_fac(i) ! y-component of transport factor
   end do
-  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,nodat,no_data_int)
-  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,nodat,no_data_int)
+  call xyslope(trans_x,pf1,cta,imax,ncol,nrow,d_trans_x_dx,unused,celsiz,celsiz,no_data_64,no_data_int)
+  call xyslope(trans_y,pf1,cta,imax,ncol,nrow,unused,d_trans_y_dy,celsiz,celsiz,no_data_64,no_data_int)
   write(*,*) 'd_trans_x_dx max, min', maxval(d_trans_x_dx), minval(d_trans_x_dx)
   write(*,*) 'd_trans_y_dy max, min', maxval(d_trans_y_dy), minval(d_trans_y_dy)
   num_steps_flt=float(num_steps)
   if(max_zones == 1) then
-    maxd=int(num_steps_flt*depth_max(1)); write(*,*) 'num_steps, maxd= ', num_steps,maxd(1)
+    maxd=int(num_steps_flt*depth_max(1)); write(*,*) 'num_steps, maxd= ', num_steps, maxd(1)
   else
     do i=1,imax
       maxd(i)=int(num_steps_flt*depth_max(zo(i)))
@@ -223,12 +225,14 @@
   end do
   resid_mean=resid_mean/float(imax)
 ! Adjust depths in channel areas and bare slopes
+  chan_ctr=0
   do i=1,imax
     if(soil_depth(i)<depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
 ! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
          if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
+              chan_ctr = chan_ctr + 1
          end if
       end if
   end do
@@ -242,5 +246,6 @@
   write(*,*) 'Maximum & mean residuals', resid_max,resid_mean
   write(ulog,*) 'Maximum & mean residuals', resid_max,resid_mean
   write(*,*) 'Counters, c, n-s, e-w, peak: ', ctr
-  return 
+  write(ulog,*) 'Channel grid cells where depth changed, grid-cell threshold: ', chan_ctr, chan_thresh
+ return 
   end subroutine ndsd_depth

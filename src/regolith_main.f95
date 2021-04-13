@@ -11,6 +11,7 @@
 ! grd -- total number of grid cells (col*row)
 ! imax --  number of (non-null) grid cells
 ! h0 -- characteristic soil depth, typically 0.5 m.
+! h1 -- initial estimate of depth, h, in iterative solutions
 ! hump_prod -- logical variable true if humped soil exponential production function used, 
 !              false if ordinary exponential soil production function is used.
 ! init -- name of initialization file (default name is "rg_in.txt")
@@ -117,7 +118,7 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.3.02u'; bldate='02 Apr 2021'
+  vrsn='0.3.02v'; bldate='12 Apr 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -130,6 +131,7 @@ program regolith
      & outfil,topoSmooth,soilSmooth,n_points,l_deriv,l_mode,power)
   allocate(theta_c_rad(max_zones))
   theta_c_rad=theta_c_deg*dg2rad
+  write(*,*) 'chan_thresh: ', chan_thresh
 ! determine grid size parameters RLB 4/18/2011
   call grid_size(elevfil,elfoldr,init, imax,row,col,nwf,u(1),u(3),u(12),&
    & celsiz,no_data_64)
@@ -156,10 +158,10 @@ program regolith
     plan_view_curv=0.
   end if
   pf1=0.;pf2=0; tfg=0.  !
-  nxt=0; dsctr=0; zo=0
+  nxt=0; dsctr=0; zo=1
   slope=0.; slope_rad=0. 
   temp=0.;itemp=0 
-  soil_depth=0.; zo=1; contrib_area=0.; elev=0.;  
+  soil_depth=0.; contrib_area=0.; elev=0.;  
   dzdxgs=0.;dzdygs=0.;dipgs=0.;slopgs=0.
 ! Choose file extension for grid files, Added 4/14/2010
   grxt='.txt'
@@ -314,6 +316,7 @@ program regolith
     & contrib_area,pf1,sctr,imax,temp,u(6),flo_accfil,param,header,u(1))
     write(u(1),*) 'Flow accumulation grid'
     write(u(1),*) trim(flo_accfil),sctr,' data cells'
+    write(*,*) 'chan_thresh, celsiz: ', chan_thresh, celsiz
     chan_thresh=chan_thresh/(celsiz*celsiz) ! normalize by grid cell area.
 ! Test for models that require upslope contributing area 
   elseif (trans_model == 'WNDX' .or. trans_model == 'NASD' .or. trans_model &
@@ -330,7 +333,7 @@ program regolith
     write(*,*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
     write(*,*)  'Regolith will compute soil depths without adjusting for channel depth.'
   end if
-! read cell number index to determine order of computation for NDSD models
+! read cell number index to determine order of computation for NDSD model
   if(trans_model(1:3) == 'NDS') then
     allocate(elev_index_lkup(imax),indexed_cell_number(imax))
     elev_index_lkup=0; indexed_cell_number=0 
@@ -528,11 +531,12 @@ program regolith
       d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
       call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
          & celsiz,celsiz,no_data_64,no_data_int)
-      call ndsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cell_row,cell_column,&
-         & indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,dzdygs,del2gs,&
-         & nl_slope_fac,sec_theta,soil_depth,num_steps,chan_thresh,chan_depth,&
-         & contrib_area,theta_c_rad,slope_rad,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-         & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones)
+      call ndsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,&
+         & cell_row,cell_column,indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,&
+         & dzdygs,del2gs,nl_slope_fac,sec_theta,soil_depth,num_steps,chan_thresh,&
+         & chan_depth,contrib_area,theta_c_rad,slope_rad,hump_prod,h0,dif_ratio,&
+         & depth_max,depth_min,tis,unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,&
+         & zo,max_zones)
     case default
       write(*,*) ''
       write(*,*) '***###*** Invalid soil depth model selected. ***###***'
