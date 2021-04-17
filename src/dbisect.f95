@@ -5,12 +5,12 @@ subroutine dbisect(mmax,eps,a,b,c,h0,rtb,dx,x0,itmax,l_mode)
   implicit none
 ! LOCAL VARIABLES
   integer:: m
-  real (kind = 8):: fm
+  real (kind = 8):: fm, tol
 ! FORMAL ARGUMENTS
   integer:: itmax, mmax
   real:: a, b, c, h0
   real (kind = 8):: eps, x0 
-  real (kind = 8):: rtb, dx, tol
+  real (kind = 8):: rtb, dx
   logical:: l_mode
   itmax=0 ! iteration counter
   tol=1.0e-06 ! tolerace for testing convergence

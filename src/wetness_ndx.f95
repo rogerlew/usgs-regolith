@@ -13,7 +13,7 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contr
   real(kind = 8)::w0,temp0 
 ! FORMAL ARGUMENTS
   integer, intent(in):: ulog,imax, max_zones,zo(imax)
-	real, intent(in):: depth_min(max_zones),C0(max_zones),theta_c_rad(max_zones),depth_max(max_zones)
+  real, intent(in):: depth_min(max_zones),C0(max_zones),theta_c_rad(max_zones),depth_max(max_zones)
   real, intent(in):: chan_thresh,chan_depth,contrib_area(imax)
   real, intent(in):: slope_rad(imax),power
   real, intent(inout)::soil_depth(imax)

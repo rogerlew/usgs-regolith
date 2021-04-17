@@ -21,16 +21,16 @@
   integer,intent(in):: cell_row(imax), cell_column(imax)
   integer,intent(in):: indexed_cell_number(imax), elev_index_lkup(imax), cta(ncol,nrow)
   integer,intent(in):: num_steps, max_zones, zo(imax)
-	real, intent(in):: h0(max_zones), dif_ratio(max_zones), tis
-	real, intent(in):: depth_max(max_zones), depth_min(max_zones), theta_c_rad(max_zones)
+  real, intent(in):: h0(max_zones), dif_ratio(max_zones), tis
+  real, intent(in):: depth_max(max_zones), depth_min(max_zones), theta_c_rad(max_zones)
   real, intent(in):: pf1(grd), chan_thresh,chan_depth
   real, intent(in):: contrib_area(imax), slope_rad(imax), sec_theta(imax)
   real, intent(in):: dzdxgs(imax), dzdygs(imax), del2gs(imax), nl_slope_fac(imax)
   real, intent(inout):: soil_depth(imax), unused(imax)
   real, intent(inout):: trans_x(imax), trans_y(imax)
   real, intent(inout):: d_trans_x_dx(imax), d_trans_y_dy(imax)
-	real (kind = 8),intent(in):: no_data_64,celsiz !
-	logical:: hump_prod(max_zones) 
+  real (kind = 8),intent(in):: no_data_64,celsiz !
+  logical:: hump_prod(max_zones) 
   write(*,*) 'Entering subroutine ndsd_depth'
 ! initialize local arrays  
   large=huge(h1)
@@ -247,5 +247,5 @@
   write(ulog,*) 'Maximum & mean residuals', resid_max,resid_mean
   write(*,*) 'Counters, c, n-s, e-w, peak: ', ctr
   write(ulog,*) 'Channel grid cells where depth changed, grid-cell threshold: ', chan_ctr, chan_thresh
- return 
+  return 
   end subroutine ndsd_depth

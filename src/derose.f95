@@ -7,14 +7,12 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
   & depth_max,depth_min,C0,C1,C2,zo,max_zones,power)
   implicit none
 ! LOCAL VARIABLES
-!!	integer,parameter:: double=kind(1d0)
   integer:: i, chan_ctr
   real::temp0,soil_depth_min,soil_depth_max
-!!  real(kind = 8)::power
 ! FORMAL ARGUMENTS
   integer, intent(in):: ulog,imax,max_zones,zo(imax)
-	real, intent(in):: C1(max_zones),depth_max(max_zones),depth_min(max_zones)
-	real, intent(in):: C0(max_zones),power, C2(max_zones)
+  real, intent(in):: C1(max_zones),depth_max(max_zones),depth_min(max_zones)
+  real, intent(in):: C0(max_zones),power, C2(max_zones)
   real, intent(in):: chan_thresh,chan_depth,theta_c_rad(max_zones)
   real, intent(in):: slope(imax),slope_rad(imax),contrib_area(imax),plan_view_curv(imax)
   real, intent(inout):: soil_depth(imax)

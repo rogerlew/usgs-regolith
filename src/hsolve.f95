@@ -1,4 +1,4 @@
-subroutine h_solve(a,b,c,h0,h1,h,l_mode)
+  subroutine h_solve(a,b,c,h0,h1,h,l_mode)
 !  Solver for humped soil production model (see Peletier & Rasmussen, 2009)
 !  Code updated Apr. 2021, RLB
   implicit none
@@ -70,4 +70,4 @@ subroutine h_solve(a,b,c,h0,h1,h,l_mode)
 ! Solve for depth by bisection  
   call dbisect(mmax,eps,a,b,c,h0,htb,dx,x0,itmax,l_mode)
   h=htb; if (h >= hmax) h=0. ! Depth undefined, set to zero.
-end subroutine h_solve 
+  end subroutine h_solve 

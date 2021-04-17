@@ -11,15 +11,15 @@ subroutine nsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_t
   real::h1 
 ! FORMAL ARGUMENTS
   integer, intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cta(ncol,nrow),max_zones,zo(imax)
-	real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis
-	real, intent(in):: depth_max(max_zones),depth_min(max_zones),theta_c_rad(max_zones)
+  real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis
+  real, intent(in):: depth_max(max_zones),depth_min(max_zones),theta_c_rad(max_zones)
   real, intent(in)::chan_thresh,chan_depth,pf1(grd),contrib_area(imax)
   real, intent(in):: dzdxgs(imax),dzdygs(imax),sec_theta(imax),nl_slope_fac(imax),slope_rad(imax)
   real, intent(inout)::soil_depth(imax)
   real, intent(inout)::unused(imax)
   real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
-	real (kind = 8),intent(in):: nodat,celsiz !
-	logical, intent(in):: hump_prod(max_zones), l_mode
+  real (kind = 8),intent(in):: nodat,celsiz !
+  logical, intent(in):: hump_prod(max_zones), l_mode
   write(*,*) 'Entering subroutine nsd_depth'
   do i=1,imax
     if(abs(nl_slope_fac(i))<=tis) cycle
