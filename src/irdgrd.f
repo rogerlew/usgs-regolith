@@ -67,7 +67,7 @@ c ! set default value of nodat & celsiz for use with GRASS GIS ascii files
           read*
         close(u)
         close(u1)
-        stop '-11 in subroutine irdgrd'
+        stop 'Grid array size exceeded in subroutine irdgrd'
         end if
       ctr=0
       do 120, m=1,nrow
@@ -93,7 +93,7 @@ c !  can be written out in grid format.
             read*
             close(u)
             close(u1)
-            stop '-12 in subroutine irdgrd'
+            stop 'Array size exceeded in subroutine irdgrd'
         end if
         y(ctr)=itemp(i)
         end if
@@ -112,5 +112,5 @@ c !  can be written out in grid format.
       read*
       close(u)
       close(u1)
-      stop '-10 in subroutine irdgrd'
+      stop 'File not found in subroutine irdgrd'
       end

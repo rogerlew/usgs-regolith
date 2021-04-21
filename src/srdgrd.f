@@ -58,7 +58,7 @@ c ! set default value of nodat & celsiz for use with GRASS GIS ascii files
           read*
         close(u)
         close(u1)
-        stop
+        stop 'Grid array size exceeded in srdgrd().'
         end if
         nodats=nodat
       ctr=0
@@ -84,7 +84,8 @@ c !  can be written out in grid format.
               write(*,*) 'Press RETURN to exit'
               read*
               close(u)
-            close(u1)
+              close(u1)
+              stop 'Array size exceeded in srdgrd().'
           end if
           pf(ctr)=temp(i)
         end if
@@ -103,5 +104,5 @@ c !  can be written out in grid format.
       read*
       close(u)
       close(u1)
-      stop '-23 in srdgrd()'
+      stop 'Input file not found in srdgrd().'
       end

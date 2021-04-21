@@ -76,10 +76,10 @@ c !  write grid
         write (u1,*) 'Check file name and status'
         write(*,*) 'Press RETURN to exit'
         read*
-        stop '-20 in ssvgrd()'
+        stop 'Output file not found in ssvgrd()'
  1003 format(f2.0)
  1004 format(g12.5)
- 1010 format(a,a,$)
+ 1010 format(a,a,\)
  1011 format(a)
  1012 format(t1,a,t15,a)
       end
