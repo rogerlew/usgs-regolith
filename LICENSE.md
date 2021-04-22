@@ -24,5 +24,5 @@ In no way are the patent or trademark rights of any person affected by CC0, nor 
 
 Unless expressly stated otherwise, the person who associated a work with this deed makes no warranties about the work, and disclaims liability for all uses of the work, to the fullest extent permitted by applicable law. When using or citing the work, you should not imply endorsement by the author or the affirmer.
 
-There are dependencies on numerous third party software packages, as detailed in environment.yml, all of which are open-source.
+There are dependencies on numerous third party software packages, as detailed in Dependencies.md all of which are open-source.
 
