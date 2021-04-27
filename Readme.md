@@ -99,14 +99,14 @@ Process mased model formula parameters and REGOLITH input parameter names (if ap
 | `trans_model` | Regolith depth formula |
 | ------ | ------ |
 | DRS1 | ![equation](https://latex.codecogs.com/svg.image?d_r%20=%20C_0e%5E%7B-C_1%5Ctheta%7D) |
-| DRS2 | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) |
-| DRS3 | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B2%7Dsgn%28%5Ckappa%20%29%29e%5E%7B-C_%7B1%7D%5Ctheta%20%7D) |
-| WNDX | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%20%3D%20C_%7B0%7Dln%28%5Cfrac%7BA%5E%7Bp%7D%7D%7Btan%28%5Ctheta%29%7D%29) |
-| LCSD | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BLCSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5E%7B2%7Dz%7D%29) |
-| NSD | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
-| NSDA | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSDA%7DA%5E%7B-m%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
-| NASD | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNASD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7BA%5E%7Bm%7D%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
-| NDSD | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNDSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7Bh_%7Bn%7D%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
+| DRS2 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) |
+| DRS3 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B2%7Dsgn%28%5Ckappa%20%29%29e%5E%7B-C_%7B1%7D%5Ctheta%20%7D) |
+| WNDX | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20C_%7B0%7Dln%28%5Cfrac%7BA%5E%7Bp%7D%7D%7Btan%28%5Ctheta%29%7D%29) |
+| LCSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BLCSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5E%7B2%7Dz%7D%29) |
+| NSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
+| NSDA | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSDA%7DA%5E%7B-m%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
+| NASD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNASD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7BA%5E%7Bm%7D%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
+| NDSD | ![equation](https://latex.codecogs.com/svg.image?%5Cfrac%7B-D_%7BNDSD%7D%7D%7Bcos(%5Ctheta)%7Dexp%7B%5Cleft%20(%20%5Cfrac%7B-d_r%20cos(%5Ctheta)%7D%7Bh_0%7D%20%5Cright%20)%7D%20=%20%5Cbigtriangledown%20%5Ccdot%7B%5Cleft%20(%20%5Cfrac%7Bh%20cos(%5Ctheta)%20%5Cbigtriangledown%20z%7D%7B1-%5B%7C%5Cbigtriangledown%20z%7C/S_c%5D%5E2%7D%20%5Cright%20)%7D%20%20) |
  
 
 Model code,    Required input parameters
