@@ -7,29 +7,29 @@ NSD, .true.
 # Number of soil depth zones, num_zones, max_zones
 1, 1
 # Number of steps for NDSD model, num_steps
-1000
+200
 zone, 1
 # theta_c, depth_min, depth_max, C0, C1, C2 for empirical models or theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod for process-based models
-72.,      0.1,        5.0,      0.5,   0.1,    .false.
+50.,      0.0,        5.0,      0.5,   3.0,    .false.
 # Exponent of DRS2 polynomial, or of upslope area in NASD, NSDA, and WNDX models
 1
 # File name of digital elevation grid (elevfil)
-./data/input/demsynth.txt
+./examples/Input/rastert_times_f1.txt
 # File name of slope grid (slopefil)
-none
+./examples/Input/rastert_slope_t1.asc
 # File name of flow-accumulation grid (flo_accfil)
-./data/input/flo_acc.txt
+./examples/Input/flowacc_flow1.asc
 # File name of elevation index file (ndxfil)
-./data/input/indx.txt
+./examples/Input/TIcelindxGrid_ncc.txt
 # File name of plan-view curvature grid
-./data/input/curvfil.txt
+./examples/Input/pv_curv.asc
 # File name of model-parameter zone grid
 none
 # Folder where output grid files will be stored  (folder)
-./data/output/
+./examples/Output/
 # Identification code to be added to names of output files (suffix)
 t001
 # Specify grid file extension? (.asc if true, default is .txt), Output derivatives (l_deriv)? 
-.false., .false.
+.true., .false.
 # Specify Topographic smoothing and soil smoothing (topoSmooth, soilSmooth), Smoothing window (n_points)
 .false., .false., 5

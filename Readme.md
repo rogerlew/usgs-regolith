@@ -24,21 +24,22 @@ The following list explains the variable names, types, and permissible values of
 Name,         Type,      Description
 ----------------------------------
 - `title`        char,      Brief description of project, up to 224 characters
+- `trans_model`  char,      Alpha-numeric code to designate soil depth or transport model 
+- Legal values of `trans_model`: DRS1, DRS2, DRS3, WNDX, LCSD, NSD, NSDA, NASD, or NDSD
+- `l_mode`       logical,   Switch between original mode and modified mode for the LCSD, NASD, NSDA, and NSD models.  Original mode is based on analytical formulas derived by combining soil production models with sediment transport theory (Dietrich and others, 1995; Pelletier and Rasmussen, 2009).  This mode is used for comparison with analytical solutions (to test program operation) as well as for mapping soil depth.  Modified mode is based on slight adjustments to the original analytical formulas and and is available for mapping soil depths in digital representations of natural terrain.  Modified mode computes soil depth distributions that may overcome some of the effects of small scale roughness in high-resolution DEMs without needing to smooth them.
+- `chan_thresh`  float,     Threshold (minumum) upslope contributing area at channel heads, >0.
+- `chan_depth`   float,     Average steady-state depth of alluvium in steep channels (>=0.2*sc).
 - `num_zones`    integer    Number of parameter zones to allow for variable soils across a landscape
 - `max_zones`    integer    Highest zone number, to allow for using a subsample of a larger grid, where some zones of the larger grid are absent in the subsample.
-- `h0`           float,     Characteristic soil depth, typically 0.3 - 0.5 m
+- `num_steps`    integer,   Number of (~1-cm) depth increments per unit depth (~100 - 500 for depth in meters) used in solving the NDSD model only.
 - `theta_c`      float,     Angle of stability (in degrees) This parameter enters calculation of soil depth in the nonlinear process-based models.  A soil depth of zero or min_depth is assigned to slopes steeper than this angle for all models.
-- `dif_ratio`    float,     Diffusivity ratio, >0., (&rho;<sub>b</sub> x P<sub>0</sub>)/(&rho;<sub>s</sub> x D), where D is soil diffusivity, &rho;<sub>b</sub> and &rho;<sub>s</sub> are density of bedrock and soil, respectively, and P<sub>0</sub> is maximum bedrock lowering rate on a flat surface.
-- `depth_max`    float,     Maximum soil depth, >0.
 - `depth_min`    float,     Minimum soil depth, >=0.
+- `depth_max`    float,     Maximum soil depth, >0.
 - `C0`           float,     Empirical constant, >0.
 - `C1`           float,     Empirical constant, >0.
 - `C2`           float,     Empirical constant, >0.
-- `chan_thresh`  float,     Threshold (minumum) upslope contributing area at channel heads, >0.
-- `chan_depth`   float,     Average steady-state depth of alluvium in steep channels (>=0.2*sc).
-- `num_steps`    integer,   Number of (~1-cm) depth increments per unit depth (~100 - 500 for depth in meters)
-- `trans_model`  char,      Alpha-numeric code to designate soil depth or transport model 
-- Legal values of `trans_model`: DRS1, DRS2, DRS3, WNDX, LCSD, NSD, NSDA, NASD, or NDSD
+- `h0`           float,     Characteristic soil depth, typically 0.3 - 0.5 m
+- `dif_ratio`    float,     Diffusivity ratio, >0., (&rho;<sub>b</sub> x P<sub>0</sub>)/(&rho;<sub>s</sub> x D), where D is soil diffusivity, &rho;<sub>b</sub> and &rho;<sub>s</sub> are density of bedrock and soil, respectively, and P<sub>0</sub> is maximum bedrock lowering rate on a flat surface.
 - `hump_prod`    logical,   Use humped soil production function? (enabled if `.true.` or disabled if `.false.`)
 - `power`        integer,   Exponent of DRS2 ploynomial or of uplsope area in NASD, NSDA, and WNDX models
 - `elevfil`      char,      File path name of digital elevation grid (<=255 characters)
@@ -51,7 +52,6 @@ Name,         Type,      Description
 - `suffix`       char,      Identification code to be added to names of output files (<=16 char.)
 - `lasc`         logical,   Specify grid file extension? (*.asc* if `.true.`, *.txt* if `.false`)
 - `l_deriv`      logical,   Specify to output derivatives and related quantites
-- `l_mode`       logical,   Switch between original mode and modified mode for the LCSD, NASD, NSDA, and NSD models.  Original mode is based on analytical formulas derived by combining soil production models with sediment transport theory (Dietrich and others, 1995; Pelletier and Rasmussen, 2009).  This mode is used for comparison with analytical solutions (to test program operation) as well as for mapping soil depth.  Modified mode is based on slight adjustments to the original analytical formulas and and is available for mapping soil depths in digital representations of natural terrain.  Modified mode computes soil depth distributions that may overcome some of the effects of small scale roughness in high-resolution DEMs without needing to smooth them.
 - `topoSmooth`   logical, Specify topographic smoothing (enabled if `.true.`,  diabled if `.false.`)
 - `soilSmooth`   logical,  Specify smoothing of computed soil depth (enabled if `.true.`,  diabled if `.false.`)
 - `n_points`     integer,  Window size, in number of grid cells, of a running average to approximate gaussian smoothing.
@@ -88,6 +88,7 @@ Process mased model formula parameters and REGOLITH input parameter names (if ap
 - *d*<sub>*r*</sub>,        regolith depth, m
 - *z*,                      ground surface, m
 - *D*,                      diffusivity ratio (dif_ratio)
+- *h*,                      trial depth, m, in iterative solution of NDSD model
 - *h*<sub>*0*</sub>,        characteristic soil depth, m (h0)
 - &theta;,                  mean slope angle, degrees
 - *S*<sub>*c*</sub>,        critical slope, tangent of angle of stability, &theta;<sub>*c*</sub>, degrees (theta_c)
@@ -110,15 +111,15 @@ Process mased model formula parameters and REGOLITH input parameter names (if ap
 
 Model code,    Required input parameters
 -----------------------------------------------
-- DRS1:         `theta_c, depth_max, depth_min, C0, C1, chan_thresh, chan_depth`
+- DRS1:         `theta_c, depth_min, depth_max, C0, C1, chan_thresh, chan_depth`
 - DRS2:         `theta_c, depth_min, depth_max, C0, C1, power, chan_thresh, chan_depth`
-- DRS3:         `theta_c, depth_min, depth_max, depth_min, C0, C1, C2, chan_thresh, chan_depth`
+- DRS3:         `theta_c, depth_min, depth_max, C0, C1, C2, chan_thresh, chan_depth`
 - WNDX:         `theta_c, depth_min, depth_max, C0, power, chan_thresh, chan_depth`
-- LCSD:          `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_mode`
-- NSD:          `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_mode`
-- NSDA:         `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_mode`
-- NASD:         `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, l_mode`
-- NDSD:         `h0, theta_c, dif_ratio, depth_max, depth_min, chan_thresh, chan_depth, hump_prod, num_steps`
+- LCSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, l_mode`
+- NSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, l_mode`
+- NSDA:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, power, l_mode`
+- NASD:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, power, l_mode`
+- NDSD:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, num_steps`
 
 Model code,    Required input files
 ------------------------------------------
@@ -151,14 +152,14 @@ The following table outlines the prefixes of the output files created within the
 
 | File prefix/suffix | Logical to trigger output | Description | Applicable models |
 | ------ | ------ | ------ | ------ |
-| `RG_Log_`, `RG_` | All model runs | Log file outlining program performance and soil depth output grid | All models |
+| `RG_Log_`, `RG_` | All model runs | Log file outlining program performance and soil depth output grid.  The log file is automatically saved to the same directory where the DEM is stored. | All models |
 | `RG_aspect_gs_`, `RG_slope_` | `l_deriv` .true., no slope file specified in input | Grids of angles of steepest descent and slope in degrees | All models |
 | `RG_dzdxgs_`, `RG_dzdygs_` | `l_deriv` .true. | Grids of first derivatives in x or y direction | All models |
 | `RG_d2zdx2gs_`, `RG_d2zdy2gs_`, `RG_del2gs_`  | `l_deriv` .true. | Grids of second derivatives in x or y direction and Laplacian | LCSD, NDSD |
-| `RG_sec_delta_`, `RG_mag_del_z_sq_` | `l_deriv` .true. | Grids of secant delta (1/slope angle) and squared magnitude of z (elevation) | Process-based |
+| `RG_sec_theta_`, `RG_mag_del_z_sq_` | `l_deriv` .true. | Grids of secant &theta; (1/slope angle) and squared magnitude of z (elevation) | Process-based |
 | `RG_nl_slope_fac_`, `RG_trans_x_`, `RG_trans_y_` | `l_deriv` .true. | Grids of slope factor and x or y component of transport factor | NSD, NSDA, NASD, NDSD |
 | `RG_trans_(trans_model)_` | `l_deriv` .true. | Grid of transport factor | NSD, NSDA, NASD |
-| `RG_Del_dotDelz_nlso_` | `l_deriv` .true. | Grid of derivative of dot product of derivative of z | NDSD |
+| `RG_Del_dotDelz_nlso_` | `l_deriv` .true. | Grid of divergence of gradient of z divided by the slope factor | NDSD |
 | `_smo` | `topoSmooth`, `soilSmooth` .true. | Suffix added on smoothed grids | All models |
 | `_hmp` | `hump_prod` .true. | Suffix added to output file name if humped production model was used | LCSD, NSD, NSDA, NASD, NDSD |
 | `_anl` | `l_mode` .false. | Suffix added to output file if model run in modified mode | LCSD, NSD, NSDA, NASD, NDSD |
@@ -166,7 +167,7 @@ The following table outlines the prefixes of the output files created within the
 
 Suggested input parameter values for empirical models
 -----------------------------------------------
-The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in human tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose et al. (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho et al. (2012) are provided.  Note that depth_max and depth_min have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
+The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic deposits in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose et al. (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho et al. (2012) are provided.  Note that depth_max and depth_min have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
 
 | `trans_model` | `theta_c` (degrees) |`depth_max` (m) | `depth_min` (m) | `C0` | `C1` |  `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
@@ -231,7 +232,7 @@ Clastic sedimentary in a marine tropical to humid temperate setting, Ho et al. (
  
 Suggested input parameter values for process-based models
 -----------------------------------------------
-The following table displays the full ranges of parameters used in running the program successfully with the process-based models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were conducted on sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in human tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020). `l_mode` is available for verifying code output against analytical solutions. The original mode ranges were obtained from Pelletier & Rasmussen (2009) from tests on soils in Pima County, Arizona.
+The following table displays the full ranges of parameters used in running the program successfully with the process-based models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were derived from model runs conducted on sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020). `l_mode` is available for verifying code output against analytical solutions. The original mode ranges were obtained from Pelletier & Rasmussen (2009) from tests on soils in Pima County, Arizona.
 
 | `trans_model` | `h0` (m) | `theta_c` (degrees) | `dif_ratio` | `depth_max` (m) | `depth_min` (m) | `power` |
 | ----- | ------ | ------ | ------ | ------ | ------ | ------- |
@@ -300,7 +301,7 @@ Suggested input parameter values for all models
 | `chan_thresh` (m<sup>2</sup>) | 1500 - 2000 |
 | `chan_depth` (m) | < 0.5 |
 
-The `chan_thresh` parameter represents the minimum upslope contributing area at which channels initiate.  If the upslope contributing area as provided in the flow-accumulation grid is greater than this threshold and if the calculated soil depth is greater than the average depth of alluvium in channels steeper than 20% of the critical slope (`chan_depth`), the depths in these regions will be corrected to `chan_depth`.  To override (turn off) the adjustment of soil depth in steep channels, the user can enter a large value for the channel threshold. In most cases, `chan_thresh` > 10<sup>6</sup> will suffice.  Alternately, for models that are not area dependent, omitting the flow-accumulation grid will likewise override the depth adjustment in steep channels.
+The `chan_thresh` parameter represents the minimum upslope contributing area at which channels initiate.  If the upslope contributing area as provided in the flow-accumulation grid is greater than this threshold and if the calculated soil depth is greater than the average depth of alluvium in channels steeper than 20% of the critical slope (`chan_depth`), the depths in these regions will be corrected to `chan_depth`.  To override (turn off) the adjustment of soil depth in steep channels, the user can enter a large value for the channel threshold or depth. In most cases, `chan_thresh` > 10<sup>6</sup> or  `chan_depth`  >  `depth_max`  will suffice.  Alternately, for models that are not area dependent, omitting the flow-accumulation grid will likewise override the depth adjustment in steep channels.
  
 Optional property zones
 -----------------------
@@ -308,23 +309,24 @@ REGOLITH has an option to read in a property zone grid for the area covered by t
 
 Optional smoothing
 ------------------
-A simple low-pass filter routine has been added to smooth topographic data before computing soil depth and (or) to smooth computed soil depth output from any of the models.  Pelletier and Rasmussen (2009) stated that smoothing topographic data was necessary for their NASD and NSD models.  Filtering soil depth produced by the WNDX model can mitigate abrupt changes in soil depth near channel junctions where the upslope contributing area (flow accumulation) increases abruptly.
+A simple low-pass filter routine has been added to smooth topographic data before computing soil depth and (or) to smooth computed soil depth output from any of the models.  Pelletier and Rasmussen (2009) stated that smoothing topographic data was necessary for their NASD and NSD models.  Filtering soil depth produced by the WNDX model can mitigate abrupt changes in soil depth near channel junctions where the upslope contributing area (flow accumulation) increases abruptly.  Using a flow-accumulation grid based on flow-directions computed using the D-infinity algorithm can also mitigate abrupt changes at channel junctions.
 
 The filter algorithm computes the mean value of an N X N (where N is any odd, positive integer) patch of grid cells and replaces the original value at the center cell with the mean. In other words the filter is a running average across the grid applied successively in east-west and north south directions, respectively.  Along edges, at corners, and irregular boundaries the algorithm uses a subset of the N x N patch. Near irregular boundaries, no-data values are excluded from computation of the mean by reflecting interior values across the boundary.  The filter is applied four times to approximate the gaussian filter (Smith, 1997, see www.dspguide.com/ch24/3.htm).
 
-A line at the end of initialization file, *rg_in.txt*, allows the user to specify whether to smooth the input elevation grid, or computed soil-depth grid by typing `.true.` or `.false.` for each option. The user also specifies the value of N at the end of this line.  Note that topographic smoothing is applied before computing soil depth or any of the intermediate arrays used to compute soil depth.  Soil smoothing is computed after soil depth is computed from the original (`topoSmooth=.false.`) or smoothed (`topoSmooth.true.`) DEM. 
+A line at the end of the initialization file, *rg_in.txt*, allows the user to specify whether to smooth the input elevation grid, or computed soil-depth grid by typing `.true.` or `.false.` for each option. The user also specifies the value of N at the end of this line.  Note that topographic smoothing is applied before computing soil depth or any of the intermediate arrays used to compute soil depth.  Soil smoothing is computed after soil depth is computed from the original (`topoSmooth=.false.`) or smoothed (`topoSmooth.true.`) DEM. 
 
 Sample data
 -----------
 
-An example rg_in.txt file is provided in the main directory of this repository.  It is configured to apply test-mode parameters to the NSD soil depth model.  Sample data for synthetic terrain are provided in the directory data.  The synthetic terrain is modeled on orthogonal sine waves to represent topography having concave and convex features. Output of the original mode can be compared with analytically computed values of soil depth to confirm that the program is working correctly.
-
-Additional sample data for a small basin in dissected topography of the Oregon Coast Range are available for free download (Baum and others, 2020).  These data are stored in GEOTIFF format, but can be readily converted to ASCII grid format supported by REGOLITH using commercial or open-source GIS software.
+An example rg_in.txt file is provided in the main directory of this repository.  It is configured to use test-mode parameters for the NSD soil depth model with sample input files in the directory `examples/input`.  These sample data for a small drainage basin in dissected topography of the Oregon Coast Range are a subset of files from this study area available for free download (Baum and others, 2020).  These data are stored in GEOTIFF format, but can be readily converted to ASCII grid format supported by REGOLITH using commercial or open-source GIS software.
 
 Regolith iterations
 -------------------
 A Jupyter Notebook script Regolith_Iterations.ipynb is provided in the main directory of this repository and can be used in conjunction with the program to test varying ranges of parameters.  Running the script will iterate through these parameters by rewriting rg_in.txt with the varying parameters within the ranges specified by the user within the script.  REGOLITH will run for each set of parameters and output results with varying suffixes to denote the parameters used in each run.
 
+Test
+-----
+The `test` directory in the main directory of this repository contains a python notebook to run the program REGOLITH on input files representing synthetic terrain. The synthetic terrain is modeled on orthogonal sine waves to represent topography having concave and convex features.  The DEM is found in the directory `test/input`.  The Python notebook checks numerically computed output of the LCSD and NSD models (soil depth as well as intermediate values, such as the aspect direction, slope angle, Laplacian, and non-linear transport function) against analytically computed output for the same models to confirm that the program is working correctly.  See Readme file in the `test` directory for more details.
 
 References cited
 ----------------
