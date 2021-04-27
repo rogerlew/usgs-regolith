@@ -98,7 +98,7 @@ Process mased model formula parameters and REGOLITH input parameter names (if ap
 
 | `trans_model` | Regolith depth formula |
 | ------ | ------ |
-| DRS1 | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%3DC_%7B0%7De%5E%7B-C_%7B1%7D%5Ctheta%7D) |
+| DRS1 | ![equation](https://latex.codecogs.com/svg.image?d_r%20=%20C_0e%5E%7B-C_1%5Ctheta%7D) |
 | DRS2 | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) |
 | DRS3 | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B2%7Dsgn%28%5Ckappa%20%29%29e%5E%7B-C_%7B1%7D%5Ctheta%20%7D) |
 | WNDX | ![equation](https://latex.codecogs.com/gif.latex?d_%7Br%7D%20%3D%20C_%7B0%7Dln%28%5Cfrac%7BA%5E%7Bp%7D%7D%7Btan%28%5Ctheta%29%7D%29) |
