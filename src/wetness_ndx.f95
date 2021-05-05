@@ -32,9 +32,9 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contr
       if(temp0>w0) then
         soil_depth(i)=C0(zo(i))*log(temp0) ! h = C0*Log(a/tan(slope)) from Ho et al. (2012)
         if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
-! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
+! Compare slope angle in channels with 0.1*critical slope angle, and reduce thickness accordingly.
         if(contrib_area(i)>chan_thresh) then 
-           if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
+           if(slope_rad(i)>0.1*theta_c_rad(zo(i))) then
               if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
            end if
         end if
@@ -53,9 +53,9 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contr
       if(temp0>w0) then
         soil_depth(i)=C0(zo(i))*log(temp0) ! h = C0*Log(a/tan(slope)) from Ho et al. (2012)
         if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
-! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
+! Compare slope angle in channels with 0.1*critical slope angle, and reduce thickness accordingly.
         if(contrib_area(i)>chan_thresh) then 
-           if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
+           if(slope_rad(i)>0.1*theta_c_rad(zo(i))) then
               if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
                chan_ctr = chan_ctr + 1
           end if

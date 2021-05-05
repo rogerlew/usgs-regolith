@@ -165,8 +165,8 @@
         else
           lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*exp(-h1/(h0(zo(m))*sec_theta(m)))
         end if
-        rhs=soil_depth(iup_cn)*trans_x(iup_cn)-h1*trans_x(m)+&
-            & soil_depth(jup_cn)*trans_y(jup_cn)-h1*trans_y(m)
+        rhs=soil_depth(iup_cn)*trans_x(iup_cn)/sec_theta(iup_cn) - h1*trans_x(m)/sec_theta(m) +&  !rhs=soil_depth(iup_cn)*trans_x(iup_cn)-h1*trans_x(m)+&
+            & soil_depth(jup_cn)*trans_y(jup_cn)/sec_theta(jup_cn) - h1*trans_y(m)/sec_theta(m)  ! & soil_depth(jup_cn)*trans_y(jup_cn)-h1*trans_y(m)
         resid=abs(lhs-rhs)
         if(resid<resid_cell) then
           hmin=h1
@@ -189,7 +189,7 @@
           lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*exp(-h1/(h0(zo(m))*sec_theta(m)))
         end if
 ! Replace iup terms with with x component of Del(Del(z))/nl_slope_fac)
-        rhs=h1*d_trans_x_dx(m)+soil_depth(jup_cn)*trans_y(jup_cn)-h1*trans_y(m) 
+        rhs=h1*d_trans_x_dx(m)/sec_theta(m) +soil_depth(jup_cn)*trans_y(jup_cn)/sec_theta(jup_cn) -h1*trans_y(m)/sec_theta(m) !rhs=h1*d_trans_x_dx(m)+soil_depth(jup_cn)*trans_y(jup_cn)-h1*trans_y(m) 
         resid=abs(lhs-rhs)
         if(resid<resid_cell) then
           hmin=h1
@@ -212,7 +212,7 @@
           lhs=-dif_ratio(zo(m))*celsiz*sec_theta(m)*exp(-h1/(h0(zo(m))*sec_theta(m)))
         end if
 ! Replace jup terms with y component of Del(Del(z))/nl_slope_fac)
-        rhs=soil_depth(iup_cn)*trans_x(iup_cn)-h1*trans_x(m)+h1*d_trans_y_dy(m) 
+        rhs=soil_depth(iup_cn)*trans_x(iup_cn)/sec_theta(iup_cn) - h1*trans_x(m)/sec_theta(m) + h1*d_trans_y_dy(m)/sec_theta(m) !rhs=soil_depth(iup_cn)*trans_x(iup_cn)-h1*trans_x(m)+h1*d_trans_y_dy(m)
         resid=abs(lhs-rhs)
         if(resid<resid_cell) then
           hmin=h1
@@ -261,9 +261,9 @@
   chan_ctr=0
   do i=1,imax
     if(soil_depth(i)<depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
-! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
+! Compare slope angle in channels with 0.1*critical slope angle, and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
-         if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
+         if(slope_rad(i)>0.1*theta_c_rad(zo(i))) then
             if(soil_depth(i)>chan_depth) soil_depth(i)=chan_depth ! Set to average alluvium depth.
               chan_ctr = chan_ctr + 1
          end if

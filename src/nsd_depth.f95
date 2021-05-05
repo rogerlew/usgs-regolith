@@ -59,9 +59,9 @@ subroutine nsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_t
       end if
         if(soil_depth(i) < depth_min(zo(i))) soil_depth(i) = depth_min(zo(i))
         if(soil_depth(i) > depth_max(zo(i))) soil_depth(i) = depth_max(zo(i))
-! Compare slope angle in channels with 0.2*critical slope angle, and reduce thickness accordingly.
+! Compare slope angle in channels with 0.1*critical slope angle, and reduce thickness accordingly.
         if(contrib_area(i) > chan_thresh) then 
-           if(slope_rad(i)>0.2*theta_c_rad(zo(i))) then
+           if(slope_rad(i)>0.1*theta_c_rad(zo(i))) then
               if(soil_depth(i) > chan_depth) soil_depth(i) = chan_depth ! Set to average alluvium depth.
               chan_ctr = chan_ctr + 1
            end if

@@ -80,7 +80,7 @@ contains
     write(ulog,*) trim(trans_model)
     write(ulog,*) 'Edit ', trim(init), ' to correct model ID code, then restart program.'
     close(uini); close(ulog)
-    stop 'regolini.f95, line 64'
+    stop 'regolini.f95, lines 64 - 83'
   endif
 ! Translate alternate model codes to internal codes  
   ! ESD model is DRS1
@@ -112,7 +112,7 @@ contains
             &linct,' of ',trim(init)
       write(ulog,*) 'Edit ',trim(init), ', then restart program.'
       close(uini); close (ulog)
-      stop 'regolini.f95, line 95'
+      stop 'regolini.f95, lines 101 - 115'
     endif
     linct=linct+1
 ! Number of soil-depth zones, maximum zone number
@@ -129,7 +129,7 @@ contains
         write(ulog,*) 'Edit ', trim(init), ' to correct the number of zones or &
             &maximum number of zones, then restart program.'
         close(uini); close(ulog)
-        stop 'regolini.f95, line 114'
+        stop 'regolini.f95, lines 122 - 132'
     end if
     if(num_zones==1) then 
       max_zones=1
@@ -150,7 +150,7 @@ contains
         write(ulog,*) 'Number of steps for NDSD model out of permissible range, 1 - 10,000'
         write(ulog,*) 'Edit ', trim(init), ' to correct the number of steps'
         close(uini); close(ulog)
-        stop 'regolini.f95, line 130'
+        stop 'regolini.f95, line 137 - 153'
       end if
     end if
 ! Allocate and initialize soil zone parameters
@@ -165,132 +165,148 @@ contains
 ! (NOTE, USING iz ALLOWS ZONE NUMBERS TO BE OUT OF ORDER, a maximum zone number needed to skip zones, would require storing empty zones used in larger area, but not present current extent)
   select case(model_type)
   case('EMPR') 
-  do i=1,num_zones
-    out_of_range = .false.
-    read (uini,*,err=202) scratch,iz ! property zone number 
-    if (iz < 1 .or. iz > max_zones) then
-      out_of_range = .true.
-      write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(1) = 'Zone number out of range at line '//trim(lin_num)//' of '//trim(init)
-    else
-      zon(i) = iz
-      msg(1) = ''
-    endif 
-    linct=linct+1
-    read (uini,'(a)',err=202) heading(6); linct=linct+1
-    read (uini,*,err=202) theta_c_deg(iz), depth_min(iz), depth_max(iz),&
-        & C0(iz), C1(iz), C2(iz)
-!    Test input parameters
-    if(theta_c_deg(iz) < 0. .or. theta_c_deg(iz) > 90.)then
-      out_of_range = .true.
-      write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(2)='Critical slope angle, theta_c_deg, out of range at line '//trim(lin_num)//' of '//trim(init)
-    else
-      msg(2) = ''
-    end if
-    if(depth_max (iz) < 0. .or. depth_min(iz) < 0. .or. depth_min(iz) > depth_max(iz)) then
-      out_of_range = .true.
-      write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(3)='Maximum or minimum depth out of range at line '//trim(lin_num)//' of '//trim(init)
-    else
-      msg(3) = ''
-    end if
-    if(C0(iz) < 0. .or. C1(iz) < 0. .or. C2(iz) < 0.)then
-      out_of_range = .true.
-      write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(4)='Empirical parameter C0, C1, or C2 < 0 at '//trim(lin_num)//' of '//trim(init)
-    else
-      msg(4) = ''
-    end if
-    if(out_of_range)then
-      outfil='RegolithLog.txt'; outfil=adjustl(outfil)
-      open (ulog,file=trim(outfil),status='unknown',err=212)
-      write(*,*) ''
-      write(ulog,*) ''
-      do j=1,4
-        write(*,*) trim(adjustl(msg(j)))
-        write(ulog,*) trim(adjustl(msg(j)))
-      end do
-      write(*,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
-      write(ulog,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
-      close(uini); close(ulog)
-      stop 'regolini.f95, line 159'
-    end if
-    linct=linct+1
-    sc(iz)=tan(theta_c_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
-  end do
+    do i=1,num_zones
+      out_of_range = .false.
+      read (uini,*,err=202) scratch,iz ! property zone number 
+      if (iz < 1 .or. iz > max_zones) then
+        out_of_range = .true.
+        write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+        msg(1) = 'Zone number out of range at line '//trim(lin_num)//' of '//trim(init)
+      else
+        zon(i) = iz
+        msg(1) = ''
+      endif 
+      linct=linct+1
+      read (uini,'(a)',err=202) heading(6); linct=linct+1
+      read (uini,*,err=202) theta_c_deg(iz), depth_min(iz), depth_max(iz),&
+          & C0(iz), C1(iz), C2(iz)
+  !    Test input parameters
+      if(theta_c_deg(iz) < 0. .or. theta_c_deg(iz) > 90.)then
+        out_of_range = .true.
+        write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+        msg(2)='Critical slope angle, theta_c_deg, out of range at line '//trim(lin_num)//' of '//trim(init)
+      else
+        msg(2) = ''
+      end if
+      if(depth_max (iz) < 0. .or. depth_min(iz) < 0. .or. depth_min(iz) > depth_max(iz)) then
+        out_of_range = .true.
+        write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+        msg(3)='Maximum or minimum depth out of range at line '//trim(lin_num)//' of '//trim(init)
+      else
+        msg(3) = ''
+      end if
+      if(C0(iz) < 0. .or. C1(iz) < 0. .or. C2(iz) < 0.)then
+        out_of_range = .true.
+        write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+        msg(4)='Empirical parameter C0, C1, or C2 < 0 at '//trim(lin_num)//' of '//trim(init)
+      else
+        msg(4) = ''
+      end if
+      if(out_of_range)then
+        outfil='RegolithLog.txt'; outfil=adjustl(outfil)
+        open (ulog,file=trim(outfil),status='unknown',err=212)
+        write(*,*) ''
+        write(ulog,*) ''
+        do j=1,4
+          write(*,*) trim(adjustl(msg(j)))
+          write(ulog,*) trim(adjustl(msg(j)))
+        end do
+        write(*,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
+        write(ulog,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
+        close(uini); close(ulog)
+        stop 'regolini.f95, line 167 - 217'
+      end if
+      linct=linct+1
+      sc(iz)=tan(theta_c_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
+    end do
   case('PROC')
-  do i=1,num_zones
-    out_of_range = .false.
-    read (uini,*,err=202) scratch,iz ! property zone number 
-    if (iz < 1 .or. iz > max_zones) then
-      out_of_range = .true.
-      write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(1)='Zone number out of range at line '//trim(lin_num)//' of '//trim(init)
-    else
-      zon(i) = iz
-      msg(1) = ''
-    endif 
-    linct=linct+1
-    read (uini,'(a)',err=202) heading(7); linct=linct+1
-    read (uini,*,err=202) theta_c_deg(iz), depth_min(iz), depth_max(iz),&
-        & h0(iz), dif_ratio(iz), hump_prod(iz) 
-!    Test input parameters
-    if(theta_c_deg(iz) < 0. .or. theta_c_deg(iz) > 90.)then
-      out_of_range = .true.
-      write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(2)='Critical slope angle, theta_c_deg, out of range at line '//trim(lin_num)//' of '//trim(init)
-    else
-      msg(2) = ''
-    end if
-    if (l_mode) then ! Allow negative minimum depth in Original mode
-      if(depth_max (iz) < 0. .or. depth_min(iz) > depth_max(iz))then
+    do i=1,num_zones
+      out_of_range = .false.
+      read (uini,*,err=202) scratch,iz ! property zone number 
+      if (iz < 1 .or. iz > max_zones) then
         out_of_range = .true.
         write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-        msg(3)='Maximum or minimum depth out of range at line '//trim(lin_num)//' of '//trim(init)
+        msg(1)='Zone number out of range at line '//trim(lin_num)//' of '//trim(init)
       else
-        msg(3) = ''
-      end if
-    else
-      if(depth_max (iz) < 0. .or. depth_min(iz) < 0. .or. depth_min(iz) > depth_max(iz))then
+        zon(i) = iz
+        msg(1) = ''
+      endif 
+      linct=linct+1
+      read (uini,'(a)',err=202) heading(7); linct=linct+1
+      read (uini,*,err=202) theta_c_deg(iz), depth_min(iz), depth_max(iz),&
+          & h0(iz), dif_ratio(iz), hump_prod(iz) 
+  !    Test input parameters
+      if(theta_c_deg(iz) < 0. .or. theta_c_deg(iz) > 90.)then
         out_of_range = .true.
         write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-        msg(3)='Maximum or minimum depth out of range at line '//trim(lin_num)//' of '//trim(init)
+        msg(2)='Critical slope angle, theta_c_deg, out of range at line '//trim(lin_num)//' of '//trim(init)
       else
-        msg(3) = ''
+        msg(2) = ''
       end if
-    endif
-    if(h0(iz) < 0. .or. dif_ratio(iz) < 0.)then
-      out_of_range = .true.
-      write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-      msg(4)='Model parameter h0, or dif_ratio < 0 at '//trim(lin_num)//' of '//trim(init)
-    else
-      msg(4) = ''
-    end if
-    if(out_of_range)then
-      outfil='RegolithLog.txt'; outfil=adjustl(outfil)
-      open (ulog,file=trim(outfil),status='unknown',err=212)
-      write(*,*) ''
-      write(ulog,*) ''
-      do j=1,4
-        write(*,*) trim(adjustl(msg(j)))
-        write(ulog,*) trim(adjustl(msg(j)))
-      end do
-      write(*,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
-      write(ulog,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
-      close(uini); close(ulog)
-      stop 'regolini.f95, line 214'
-    end if
-    linct=linct+1
-    sc(iz)=tan(theta_c_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
-  end do
+      if (l_mode) then ! Allow negative minimum depth in Original mode
+        if(depth_max (iz) < 0. .or. depth_min(iz) > depth_max(iz))then
+          out_of_range = .true.
+          write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+          msg(3)='Maximum or minimum depth out of range at line '//trim(lin_num)//' of '//trim(init)
+        else
+          msg(3) = ''
+        end if
+      else
+        if(depth_max (iz) < 0. .or. depth_min(iz) < 0. .or. depth_min(iz) > depth_max(iz))then
+          out_of_range = .true.
+          write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+          msg(3)='Maximum or minimum depth out of range at line '//trim(lin_num)//' of '//trim(init)
+        else
+          msg(3) = ''
+        end if
+      endif
+      if(h0(iz) < 0. .or. dif_ratio(iz) < 0.)then
+        out_of_range = .true.
+        write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+        msg(4)='Model parameter h0, or dif_ratio < 0 at '//trim(lin_num)//' of '//trim(init)
+      else
+        msg(4) = ''
+      end if
+      if(out_of_range)then
+        outfil='RegolithLog.txt'; outfil=adjustl(outfil)
+        open (ulog,file=trim(outfil),status='unknown',err=212)
+        write(*,*) ''
+        write(ulog,*) ''
+        do j=1,4
+          write(*,*) trim(adjustl(msg(j)))
+          write(ulog,*) trim(adjustl(msg(j)))
+        end do
+        write(*,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
+        write(ulog,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
+        close(uini); close(ulog)
+        stop 'regolini.f95, line 222 - 282'
+      end if
+      linct=linct+1
+      sc(iz)=tan(theta_c_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
+    end do
   case default ! undefined model type
     write(*,*) 'Model type is undefined.'
-    stop 'regolini.f95, line 279'  
+    stop 'regolini.f95, line 289'  
   end select
 ! Model exponent
     read (uini,'(a)',err=202) heading(8); linct=linct+1
     read (uini,*,err=202) power; linct=linct+1
+    if(abs(power) > 10.) then
+      write(*,*) 'Absolute value of exponent too big, |power| > 10.0: ', power
+      write(*,*) 'Revise value of <power> in rg_in.txt and restart'
+      write(ulog,*) 'Absolute value of exponent too big, |power| > 10.0: ', power
+      write(ulog,*) 'Revise value of <power> in rg_in.txt and restart'
+      close(uini); close(ulog) 
+      stop 'regolini.f95, lines 294 - 300'  
+    endif
+    if(abs(power) < 0.1) then
+      write(*,*) 'Absolute value of exponent too small, |power| < 0.1: ', power
+      write(*,*) 'Revise value of <power> in rg_in.txt and restart'
+      write(ulog,*) 'Absolute value of exponent too small, |power| < 0.1: ', power
+      write(ulog,*) 'Revise value of <power> in rg_in.txt and restart'
+      close(uini); close(ulog) 
+      stop 'regolini.f95, lines 302 - 308'  
+    endif
 !  path names of input files
     read (uini,'(a)',err=202) heading(9); linct=linct+1
 ! File name of digital elevation grid (elevfil)
@@ -360,7 +376,7 @@ contains
     write(*,*) 'Create directory ', trim(elfoldr)
     write(*,*) 'or edit ', trim(init), ' to correct the directory path name'
     write(*,*) '(input variable "elevfil"), then restart program.'
-    stop 'regolini.f95, line 340'
+    stop 'regolini.f95, line 352 - 379'
   end if
   write (ulog,*) ''
   write (ulog,*) 'Starting Regolith ', vrsn,' ',bldate
@@ -473,7 +489,7 @@ contains
     write (ulog,*) 'Check file location and name'
     write(*,*) 'Press RETURN to exit'
     read*
-  stop '201 in regolini.f95 (line 441)'
+  stop '201 in regolini.f95 (line 475 - 492)'
   202  continue
 ! Report error reading initialization file.
     write (*,*) ''
@@ -491,7 +507,7 @@ contains
     write (ulog,*) 'Check file contents and organization'
     write(*,*) 'Press RETURN to exit'
     read*
-  stop '202 in regolini.f95 (line 459)'
+  stop '202 in regolini.f95 (line 493 - 510)'
   211  continue
     write (*,*) ''
     write (*,*) '*** Error opening output file in subroutine regolini() ***'
@@ -504,7 +520,7 @@ contains
     write (ulog,*) 'Check file path and directory status'
     write(*,*) 'Press RETURN to exit'
     read*
-  stop '211 in regolini.f95 (line 477)'
+  stop '211 in regolini.f95 (line 511 - 523)'
   212  continue
     write (*,*) ''
     write (*,*) '*** Error opening output file in subroutine regolini() ***'
@@ -512,7 +528,7 @@ contains
     write (*,*) 'Check file path and status'
     write(*,*) 'Press RETURN to exit'
     read*
-  stop '212 in regolini.f95 (line 490)'
+  stop '212 in regolini.f95 (line 524 - 531)'
   end subroutine regolini
   
 end module read_inputs
