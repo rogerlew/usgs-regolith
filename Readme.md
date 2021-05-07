@@ -105,7 +105,7 @@ Process-based model formula parameters and REGOLITH input parameter names (if ap
 | LCSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BLCSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5E%7B2%7Dz%7D%29) | Pelletier and Rasmussen (2009) |
 | NSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) | Pelletier and Rasmussen (2009) |
 | NSDA |  ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSDA%7DA%5E%7B-m%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |  Pelletier and Rasmussen (2009)\*\* |
-| NASD |  ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNASD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7BA%5E%7Bm%7D%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
+| NASD |  ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNASD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7BA%5E%7Bm%7D%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) | Pelletier and Rasmussen (2009) |
 | NDSD |  ![equation](https://latex.codecogs.com/svg.image?%5Cfrac%7B-D_%7BNDSD%7D%7D%7Bcos(%5Ctheta)%7Dexp%7B%5Cleft%20(%20%5Cfrac%7B-d_r%20cos(%5Ctheta)%7D%7Bh_0%7D%20%5Cright%20)%7D%20=%20%5Cbigtriangledown%20%5Ccdot%7B%5Cleft%20(%20%5Cfrac%7Bh%20cos(%5Ctheta)%20%5Cbigtriangledown%20z%7D%7B1-%5B%7C%5Cbigtriangledown%20z%7C/S_c%5D%5E2%7D%20%5Cright%20)%7D%20%20) | Pelletier and Rasmussen (2009) |
  
  \*Formula generalized for arbitrary exponent, *m*.
@@ -175,14 +175,14 @@ The following table outlines the prefixes of the output files created within the
 
 Suggested input parameter values for empirical models
 -----------------------------------------------
-The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic deposits in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose et al. (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho et al. (2012) are provided.  Note that depth_max and depth_min have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
+The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic deposits in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose et al. (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho et al. (2012) are provided.  Note that `depth_max` and `depth_min` have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
 
-| `trans_model` | `theta_c` (degrees) |`depth_max` (m) | `depth_min` (m) | `C0` | `C1` |  `C2` | `power` |
+| `trans_model` | `theta_c` (degrees) | `depth_min` (m) |`depth_max` (m) | `C0` | `C1` |  `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 30 - 60 | 2 - 5 | 0 - 0.1 | 1 - 7 | 0.005 - 0.06 | — | — |
-| DRS2 | 30 - 60 | 2 - 5 | 0 - 0.1 | 1 - 3 | 0.01 - 0.06 | — | 1 - 3 |
-| DRS3 | 30 - 60 | 2 - 5 | 0 - 0.1 | 1 - 5 | 0.01 - 0.06 | 1.5 | — |
-| WNDX | 30 - 60 | 2 - 5 | 0 - 0.1 | 0.1 - 1 | — | — | 1 - 2 |
+| DRS1 | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 7 | 0.005 - 0.06 | — | — |
+| DRS2 | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 3 | 0.01 - 0.06 | — | 1 - 3 |
+| DRS3 | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 5 | 0.01 - 0.06 | 1.5 | — |
+| WNDX | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.1 - 1 | — | — | 1 - 2 |
 
 
 Continental glacial deposits in humid temperate setting
@@ -241,13 +241,13 @@ Suggested input parameter values for process-based models
 -----------------------------------------------
 The following table displays the full ranges of parameters used in running the program successfully with the process-based models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were derived from model runs conducted on sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020). `l_mode` is available for verifying code output against analytical solutions. The original mode ranges were obtained from Pelletier & Rasmussen (2009) from tests on soils in Pima County, Arizona.
 
-| `trans_model` | `h0` (m) | `theta_c` (degrees) | `dif_ratio` | `depth_max` (m) | `depth_min` (m) | `power` |
+| `trans_model` | `theta_c` (degrees) | `depth_min` (m) | `depth_max` (m) | `h0` (m) | `dif_ratio` | `power` |
 | ----- | ------ | ------ | ------ | ------ | ------ | ------- |
-| LCSD | 0.3 - 0.5 | 30 - 60 | 0.001 - 0.1 | 2 - 5 | 0 - 0.1 | — |
-| NSD | 0.3 - 0.5 | 30 - 60 | 0.005 - 0.1 | 2 - 5 | 0 - 0.1 | — |
-| NSDA | 0.3 - 0.5 | 30 - 60 | 0.02 - 5 | 2 - 5 | 0 - 0.1 | 1 - 3 |
-| NASD | 0.3 - 0.5 | 30 - 60 | 0.15 - 1 | 2 - 5 | 0 - 0.1 | 1 - 3 |
-| NDSD | 0.3 - 0.5 | 30 - 60 | 0.1 - 3 | 2 - 5 | 0 - 0.1 | — |
+| LCSD | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.3 - 0.5 | 0.001 - 0.1 | — |
+| NSD | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.3 - 0.5 | 0.005 - 0.1 | — |
+| NSDA | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.3 - 0.5 | 0.02 - 5 | 1 - 3 |
+| NASD | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.3 - 0.5 | 0.15 - 1 | 1 - 3 |
+| NDSD | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.3 - 0.5 | 0.1 - 3 | — |
 
 
 Continental glacial deposits in humid temperate setting
@@ -308,7 +308,7 @@ Suggested input parameter values for all models
 | `chan_thresh` (m<sup>2</sup>) | 1500 - 2000 |
 | `chan_depth` (m) | < 0.5 |
 
-The `chan_thresh` parameter represents the minimum upslope contributing area at which channels initiate.  If the upslope contributing area as provided in the flow-accumulation grid is greater than this threshold and if the calculated soil depth is greater than the average depth of alluvium in channels steeper than 20% of the critical slope (`chan_depth`), the depths in these regions will be corrected to `chan_depth`.  To override (turn off) the adjustment of soil depth in steep channels, the user can enter a large value for the channel threshold or depth. In most cases, `chan_thresh` > 10<sup>6</sup> or  `chan_depth`  >  `depth_max`  will suffice.  Alternately, for models that are not area dependent, omitting the flow-accumulation grid will likewise override the depth adjustment in steep channels.
+The `chan_thresh` parameter represents the minimum upslope contributing area at which channels initiate.  If the upslope contributing area as provided in the flow-accumulation grid is greater than this threshold and if the calculated soil depth is greater than the average depth of alluvium in channels steeper than 10% of the critical slope (`chan_depth`), the depths in these regions will be corrected to `chan_depth`.  To override (turn off) the adjustment of soil depth in steep channels, the user can enter a large value for the channel threshold or depth. In most cases, `chan_thresh` > 10<sup>6</sup> or  `chan_depth`  >  `depth_max`  will suffice.  Alternately, for models that are not area dependent, omitting the flow-accumulation grid will likewise override the depth adjustment in steep channels.
  
 Optional property zones
 -----------------------
