@@ -96,19 +96,27 @@ Process-based model formula parameters and REGOLITH input parameter names (if ap
 - *m*,                      exponent of upslope area (power)
 - *h*<sub>*n*</sub>,        soil thickness normal to surface, m 
 
-| `trans_model` | Regolith depth formula |
-| ------ | ------ |
-| DRS1 | ![equation](https://latex.codecogs.com/svg.image?d_r%20=%20C_0e%5E%7B-C_1%5Ctheta%7D) |
-| DRS2 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) |
-| DRS3 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B2%7Dsgn%28%5Ckappa%20%29%29e%5E%7B-C_%7B1%7D%5Ctheta%20%7D) |
-| WNDX | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20C_%7B0%7Dln%28%5Cfrac%7BA%5E%7Bp%7D%7D%7Btan%28%5Ctheta%29%7D%29) |
-| LCSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BLCSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5E%7B2%7Dz%7D%29) |
-| NSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
-| NSDA | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSDA%7DA%5E%7B-m%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
-| NASD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNASD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7BA%5E%7Bm%7D%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
-| NDSD | ![equation](https://latex.codecogs.com/svg.image?%5Cfrac%7B-D_%7BNDSD%7D%7D%7Bcos(%5Ctheta)%7Dexp%7B%5Cleft%20(%20%5Cfrac%7B-d_r%20cos(%5Ctheta)%7D%7Bh_0%7D%20%5Cright%20)%7D%20=%20%5Cbigtriangledown%20%5Ccdot%7B%5Cleft%20(%20%5Cfrac%7Bh%20cos(%5Ctheta)%20%5Cbigtriangledown%20z%7D%7B1-%5B%7C%5Cbigtriangledown%20z%7C/S_c%5D%5E2%7D%20%5Cright%20)%7D%20%20) |
+| `trans_model` | Regolith depth formula |Citation|
+| ------ | ------ | ------ |
+| DRS1 | ![equation](https://latex.codecogs.com/svg.image?d_r%20=%20C_0e%5E%7B-C_1%5Ctheta%7D) | DeRose and others (1991) |
+| DRS2 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) | DeRose (1996)\* |
+| DRS3 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B2%7Dsgn%28%5Ckappa%20%29%29e%5E%7B-C_%7B1%7D%5Ctheta%20%7D) | Baum and others (2011) |
+| WNDX | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20C_%7B0%7Dln%28%5Cfrac%7BA%5E%7Bp%7D%7D%7Btan%28%5Ctheta%29%7D%29) | Ho and others (2012)\* |
+| LCSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BLCSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5E%7B2%7Dz%7D%29) | Pelletier and Rasmussen (2009) |
+| NSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) | Pelletier and Rasmussen (2009) |
+| NSDA |  ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSDA%7DA%5E%7B-m%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |  Pelletier and Rasmussen (2009)\*\* |
+| NASD |  ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNASD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7BA%5E%7Bm%7D%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |
+| NDSD |  ![equation](https://latex.codecogs.com/svg.image?%5Cfrac%7B-D_%7BNDSD%7D%7D%7Bcos(%5Ctheta)%7Dexp%7B%5Cleft%20(%20%5Cfrac%7B-d_r%20cos(%5Ctheta)%7D%7Bh_0%7D%20%5Cright%20)%7D%20=%20%5Cbigtriangledown%20%5Ccdot%7B%5Cleft%20(%20%5Cfrac%7Bh%20cos(%5Ctheta)%20%5Cbigtriangledown%20z%7D%7B1-%5B%7C%5Cbigtriangledown%20z%7C/S_c%5D%5E2%7D%20%5Cright%20)%7D%20%20) | Pelletier and Rasmussen (2009) |
  
- *Notes about model formulas*:  The process-based models LCSD, NSD, NSDA, and NASD are capable of computing soil depth only where the ground surface is convex upward (Pelletier and Rasmussen, 2009), such as knobs and ridges, which limits their usefulness for computing soil depth in many potential landslide source areas.  In "original" or "test" mode, we have deleted the negative sign in the argument of the log function so that the model estimates depth where the ground surface is concave upward.   In "modified" mode the formulas for the LCSD and NSD have been adjusted to compute soil depth where the ground surface is either concave or convex, by using the absolute value of the argument of the log function.  For the NSDA and NASD models in modified mode, we have inverted the argument of the log function and taken its absolute value (before computing the logarithm) to esitmate soil depth where the ground surface is either concave or convex and create an effect of soil accumulating in concave areas.  We recognise that these modifications violate assumptions of the sediment transport theories upon which the models are based, but our purpose is to find practical solutions for estimating soil depth on landslide prone hillsides for hazard assessment, rather than modeling landscape evolution. 
+ \*Formula generalized for arbitrary exponent, *m*.
+ \*\*The NSDA model is a hybrid of the NSD model (Pelletier and Rasmussen, 2009) and linear dependence on upslope contributing area.
+ 
+ ### Notes about model formulas  
+ The formulas for the soil-production and transport (process-based) models, LCSD, NSD, NSDA, NASD, and NDSD, listed above present the theoretical formulas (Pelletier and Rasmussen, 2009).  However REGOLITH implements modified forms of these formulas for the purpose of improving model results.  The LCSD, NSD, NSDA, and NASD models are capable of computing soil depth only where the ground surface is convex upward (Pelletier and Rasmussen, 2009; Patton et al., 2018), such as knobs and ridges, which limits their usefulness for computing soil depth in many potential landslide source areas.  Source areas for shallow landslides occur far more commonly on planar and concave slopes than on convex slope.  In addition, these models tend to produce noisy soil-depth estimates on high-resolution topography.  
+ 
+ Some simple changes were made to address the need for estimating soil depth on planar and concave slopes.  In "original" or "test" mode, we have deleted the negative sign in the argument of the log function so that the model estimates depth where the ground surface is concave upward.   In "modified" mode the formulas for the LCSD and NSD have been adjusted to compute soil depth where the ground surface is either concave or convex, by using the absolute value of the argument of the log function.  For the NSDA and NASD models in modified mode, we have inverted the argument of the log function and taken its absolute value (before computing the logarithm) to esitmate soil depth where the ground surface is either concave or convex and create an effect of soil accumulating in concave areas.  Consequently, the valid range of values for the diffusivity ratio for these two models differs greatly from the expected range for the unmodified versions of the models.  We recognise that the modifications of the process-based model formulas implemented in REGOLITH violate some of the original assumptions of the sediment transport theories upon which the models are based. However, the purpose of the modifications is to find practical solutions for estimating soil depth on landslide prone hillsides for hazard assessment, rather than modeling landscape evolution.  
+ 
+ Due to its depth dependence, the NDSD model cannot be solved directy for *d*<sub>*r*</sub>.  Consequently, it is solved numerically in the manner suggested by Pelletier and Rasmussen (2009).  By specifying the number of steps per unit of depth, the user controls the resolution of the estimated soil depths.  For example, setting the value of `num_steps` to 100 will provide 1-cm resolution on the depth estimate if the depth unit is meters.  The larger the value of  `num_steps`  the slower the computations will proceed. 
 
 Model code,    Required input parameters
 -----------------------------------------------
@@ -165,7 +173,6 @@ The following table outlines the prefixes of the output files created within the
 | `_hmp` | `hump_prod` .true. | Suffix added to output file name if humped production model was used | LCSD, NSD, NSDA, NASD, NDSD |
 | `_anl` | `l_mode` .false. | Suffix added to output file if model run in modified mode | LCSD, NSD, NSDA, NASD, NDSD |
 
-
 Suggested input parameter values for empirical models
 -----------------------------------------------
 The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic deposits in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose et al. (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho et al. (2012) are provided.  Note that depth_max and depth_min have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
@@ -217,10 +224,10 @@ Granitoid in humid tropical setting, Tello (2020)
 | DRS2 | 50 - 60 | 1 - 3 | 0.01 - 0.03 | — | 3 |
 | WNDX | 50 - 60 | 0.1 - 0.3 | — | — | 1 |
 
-Sandstone in humid temperate setting, DeRose (1996) and Baum et al. (2011)
+Sandstone in humid temperate setting, DeRose and others (1991), DeRose (1996) and Baum et al. (2011)
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 30 - 60 | 5.0 | 0.124 | — | — | 
+| DRS1 | 30 - 60 | 50.0 | 0.124 | — | — | 
 | DRS2 | 30 - 60 | 1.57 - 1.68 | 0.019 - 0.022 | — | 3 |
 | DRS3 | 30 - 60 | 5.0 | 0.04 | 1.5 | — |
 
@@ -313,11 +320,13 @@ A simple low-pass filter routine has been added to smooth topographic data befor
 
 The filter algorithm computes the mean value of an N X N (where N is any odd, positive integer) square of grid cells and replaces the original value at the center cell with the mean. The filter computes a running average across the grid applied successively in east-west and north south directions, respectively.  Along edges, at corners, and irregular boundaries the algorithm uses a subset of the N x N square. Near irregular boundaries, no-data values are excluded from computation of the mean by reflecting interior values across the boundary.  The filter is applied four times to approximate the gaussian filter (Smith, 1997, see www.dspguide.com/ch24/3.htm).
 
-A line at the end of the initialization file, *rg_in.txt*, allows the user to specify whether to smooth the input elevation grid, or computed soil-depth grid by typing `.true.` or `.false.` for each option. The user also specifies the value of N at the end of this line.  Note that topographic smoothing is applied before computing soil depth or any of the intermediate arrays used to compute soil depth.  Soil smoothing is computed after soil depth is computed from the original (`topoSmooth=.false.`) or smoothed (`topoSmooth.true.`) DEM. 
+A line at the end of the initialization file, *rg_in.txt*, allows the user to specify whether to smooth the input elevation grid, or computed soil-depth grid by typing `.true.` or `.false.` for each option. The user also specifies the value of N at the end of this line.  Note that topographic smoothing is applied before computing soil depth or any of the intermediate arrays used to compute soil depth.  Soil smoothing is computed after soil depth is computed from the original (`topoSmooth=.false.`) or smoothed (`topoSmooth=.true.`) DEM. 
+
+### Smoothing noisy soil-depth output
+Some of the process-based models tend to produce noisy output, particularly the LCSD, NSD, NSDA, and NASD models.  Fine-scale roughness in high-resolution DEMs contributes to this problem. Applying the modified forms of these models, which allow them to make depth estimates in concave as well as convex topography helps reduce the noise. In addition, the two smoothing options provided in REGOLITH can help eliminate the noise.  Smoothing the DEM (`topoSmooth=.true.`) reduces or eliminates the fine-scale roughness and tends to produce a fairly sharp line between areas of soil and no soil.  Smoothing the soil depth computed for an unsmoothed DEM tends to blur and spread the soil depth distribution.  This approach has been effective to reduce noise in the computed soil depth for study areas in Washington, Oregon, Colorado, and Puerto Rico that were analyzed during development of REGOLITH.  A smoothing window of 3 or 5 has been sufficient for these cases.  Thus, using the combination `topoSmooth=.false.`, `soilSmooth=.true.`, and `n_points=3`  or `n_points=5` has worked well. 
 
 Sample data
 -----------
-
 An example rg_in.txt file is provided in the main directory of this repository.  It is configured to use test-mode parameters for the NSD soil-depth model with sample input files in the directory *examples/input*.  These sample data for a small drainage basin in dissected topography of the Oregon Coast Range are a subset of files from this study area available for free download (Baum and others, 2020).  These data are stored in GEOTIFF format, but can be readily converted to ASCII grid format supported by REGOLITH using commercial or open-source GIS software.
 
 Regolith iterations
@@ -341,6 +350,8 @@ DeRose, R.C., 1996, Relationships between slope morphology, regolith depth, and 
 Dietrich, W.E., Reiss, R., Hus, M.L., and Montgomery, D.R., 1995, A process-based model for colluvial soil depth and shallow landsliding using digital elevation data: Hydrological Processes Vol. 9, pp. 383–400. 
 
 Ho, J.-Y.; Lee, K.T.; Chang, T.-C.; Wang, Z.-Y.; and Liao, Y.-H., 2012, Influences of spatial distribution of soil thickness on shallow landslide prediction: Engineering Geology, Vol. 124, pp. 38–46.
+
+Patton, N.R., Lohse, K.A., Godsey, S.E., Crosby, B.T., Seyfried, M.S. , 2018, Predicting soil thickness on soil mantled hillslopes: Nature Communications, v.9, no. 3329, https://doi.org/10.1038/s41467-018-05743-y.
 
 Pelletier, J.D., and Rasmussen, C., 2009, Geomorphically based predictive mapping of soil thickness in upland watersheds: Water Resources Research, Vol. 45, W09417
 
