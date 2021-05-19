@@ -15,7 +15,7 @@ A makefile in the src directory can be used to compile the Fortran source code. 
 
 Using the program
 -----------------
-The program runs from the command line and can be compiled for any operating system that supports Fortran 95.  The user provides a parameter input file, *rg_in.txt*, containing a list of model parameters and path names for other input files.  The digital elevation model and related user-provided input files, slope, upslope contributing area, elevation index, plan-view curvature, and property zone are raster grids in ASCII grid format.  All input grids must have the same spatial reference, resolution, and footprint.  Input file requirements vary depending on the selected soil model (see Required input files, below); however, each model requires a user provided DEM. The NDSD model requires an elevation index grid, which can be created by the utility program TopoIndex (distributed with TRIGRS).  Source code and executabe files for TopoIndex are available at https://code.usgs.gov/usgs/landslides-trigrs.  For the DRS3 model, a user-supplied plan-view curvature grid, which can be created using GIS software, is also needed. The NASD, NSDA, and WNDX models require a flow-accumulation grid (count of upslope grid cells) which can additionally be created using GIS software.  While each model will utilize a grid of slope angle values, the program can compute this and optionally output the grid if one does not exist or if the user specifies topographic smoothing.  The outputted slope grid can be used in future iterations within the same study area to improve computation time.  In addition to a grid of slope angle values, the program outputs a log file, an ASCII grid of computed soil depth, and optional grids of various intermediate values (see Output files, below).
+The program runs from the command line and can be compiled for any operating system that supports Fortran 95.  The user provides a parameter input file, *rg_in.txt*, containing a list of model parameters and path names for other input files.  The digital elevation model and related user-provided input files, slope, upslope contributing area, elevation index, plan-view curvature, and property zone are raster grids in ASCII grid format.  All input grids must have the same spatial reference, resolution, and footprint.  Input file requirements vary depending on the selected soil model (see Required input files, below); however, each model requires a user provided DEM. The NDSD model requires an elevation index grid, which can be created by the utility program TopoIndex (distributed with TRIGRS).  Source code and executabe files for TopoIndex are available at https://code.usgs.gov/usgs/landslides-trigrs.  For the DRS3 model, a user-supplied plan-view curvature grid, which can be created using Geographic Information System (GIS) software, is also needed. The NASD, NSDA, and WNDX models require a flow-accumulation grid (count of upslope grid cells) which can additionally be created using GIS software.  While each model will utilize a grid of slope angle values, the program can compute this and optionally output the grid if one does not exist or if the user specifies topographic smoothing.  The outputted slope grid can be used in future iterations within the same study area to improve computation time.  In addition to a grid of slope angle values, the program outputs a log file, an ASCII grid of computed soil depth, and optional grids of various intermediate values (see Output files, below).
 
 Input parameter definitions
 ---------------------------
@@ -146,7 +146,7 @@ Input file variable name,   Contents
 -------------------------------------
 - `elevfil`        A gridded digital elevation model of type float 
 - `slopefil`       Slope angle grid of type float
-- `flo_accfil `    A grid of upslope contributing area of type float in units of number of cells
+- `flo_accfil `    A grid of upslope contributing area of type float in units of number of cells.  See comments in section titled "Upslope contributing area" (below).
 - `ndxfil`         A grid of integer values ranking grid cells in the digital elevation model from highest (1) to lowest (maximum number of data cells in the grid).  This grid is used only by the NDSD model to ensure that soil depth is computed in order from peaks and ridge crests down the slope to successively lower points as explained by Pelletier and Rasmussen (2009).  
 - ` pv_curvfil`    Plan-curvature grid of type float used only by the DRS3 model
 - `zonfil`         A grid of integer values identifying zones within the model where similar values of input parameters are to be applied.
@@ -309,6 +309,12 @@ Suggested input parameter values for all models
 | `chan_depth` (m) | < 0.5 |
 
 The `chan_thresh` parameter represents the minimum upslope contributing area at which channels initiate.  If the upslope contributing area as provided in the flow-accumulation grid is greater than this threshold and if the calculated soil depth is greater than the average depth of alluvium in channels steeper than 10% of the critical slope (`chan_depth`), the depths in these regions will be corrected to `chan_depth`.  To override (turn off) the adjustment of soil depth in steep channels, the user can enter a large value for the channel threshold or depth. In most cases, `chan_thresh` > 10<sup>6</sup> or  `chan_depth`  >  `depth_max`  will suffice.  Alternately, for models that are not area dependent, omitting the flow-accumulation grid will likewise override the depth adjustment in steep channels.
+
+Upslope contributing area
+------------------------------
+Various algorithms are available in commercial and open-source GIS software for computing the upslope contributing area.  As described previously, the measure of upslope contributing area used in REGOLITH is flow accumulation, the count of upslope grid cells.  Study-area boundaries rarely follow boundaries of drainage basins.  Consequently, drainage basins may be truncated causing computed flow accumulation near the edges of study areas to be incorrect.  With some algorithms, the flow-accumulation errors propagate hundreds or thousands of meters along major drainage channels.  Enlarging the study area to include heads of all drainage basins in the study area can help avoid such errors.  If enlarging to such an extent is not practical or feasible, then adding a perimeter buffer 100 - 500 m wide on all sides can greatly reduce the errors within the actual study area.  
+
+Different software tools can help mitigate the flow-accumulation errors resulting from truncated drainage basins. For example, TauDEM (http://hydrology.usu.edu/taudem) has a feature for checking for "edge contamination" that can identify areas likely affected by flow-accumulation errors.  Although REGOLITH cannot  directly use of the additional edge contamination grid produced by TauDEM, the information can help the user recognize trouble spots and devise strategies to mitigate them.  Limited experience indicates that flow accumulation results (including how flow accumulation errors propagate from DEM edges) vary with different algorithms and software.  
  
 Optional property zones
 -----------------------
@@ -316,7 +322,7 @@ REGOLITH has an option to read in a property zone grid for the area covered by t
 
 Optional smoothing
 ------------------
-A simple low-pass filter routine has been added to smooth topographic data before computing soil depth and (or) to smooth computed soil depth output from any of the models.  Pelletier and Rasmussen (2009) stated that smoothing topographic data was necessary for their NASD and NSD models.  Filtering soil depth produced by the WNDX model can mitigate large changes in soil depth near channel junctions where the upslope contributing area (flow accumulation) increases abruptly.  Using a flow-accumulation grid based on flow-directions computed using the D-infinity algorithm can also mitigate large depth changes at channel junctions.
+A simple low-pass filter routine has been added to smooth topographic data before computing soil depth and (or) to smooth computed soil depth output from any of the models.  Pelletier and Rasmussen (2009) stated that smoothing topographic data was necessary for their NASD and NSD models.  Filtering soil depth produced by the WNDX model can mitigate large changes in soil depth near channel junctions where the upslope contributing area (flow accumulation) increases abruptly.  Using a flow-accumulation grid based on flow-directions computed using the D-infinity algorithm can also mitigate large depth changes at channel junctions as well as reducing the noise in soil depth computed using the NASD and NSDA models (Han and others, 2018).
 
 The filter algorithm computes the mean value of an N X N (where N is any odd, positive integer) square of grid cells and replaces the original value at the center cell with the mean. The filter computes a running average across the grid applied successively in east-west and north south directions, respectively.  Along edges, at corners, and irregular boundaries the algorithm uses a subset of the N x N square. Near irregular boundaries, no-data values are excluded from computation of the mean by reflecting interior values across the boundary.  The filter is applied four times to approximate the gaussian filter (Smith, 1997, see www.dspguide.com/ch24/3.htm).
 
@@ -337,6 +343,10 @@ Test
 -----
 The *test* directory in the main directory of this repository contains a python notebook to run the program REGOLITH on input files representing synthetic terrain. The synthetic terrain is modeled on orthogonal sine waves to represent topography having concave and convex features.  The DEM is found in the directory *test/input*.  The Python notebook checks numerically computed output of the LCSD and NSD models (soil depth as well as intermediate values, such as the aspect direction, slope angle, Laplacian, and non-linear transport function) against analytically computed output for the same models to confirm that the program is working correctly.  See Readme file in the *test* directory for more details.
 
+Disclaimer
+------------
+Any use of trade, firm, or product names is for descriptive purposes only and does not imply endorsement by the U.S. Government.
+
 References cited
 ----------------
 Baum, R.L., Godt, J.W., and Coe, J.A., 2011, Assessing susceptibility and timing of shallow landslide and debris flow initiation in the Oregon Coast Range, USA, In Genevois, R. Hamilton, D.L. and Prestininzi, A. (eds.) Proceedings of the Fifth International Conference on Debris Flow Hazards Mitigation—Mechanics, Prediction, and Assessment, Padua, Italy, June 7-11, 2011, p. 825-834. Rome: Casa Editrice Universitá La Sapienza (doi: 10.4408/IJEGE.2011-03.B-090).
@@ -348,6 +358,8 @@ DeRose, R.C., Trustrum, N.A., and Blaschke, P.M., 1991, Geomorphic change implie
 DeRose, R.C., 1996, Relationships between slope morphology, regolith depth, and the incidence of shallow landslides in eastern Taranaki hill country: Zeitschrift für Geomorphologie, Supplementband 105, pp. 49-60.
 
 Dietrich, W.E., Reiss, R., Hus, M.L., and Montgomery, D.R., 1995, A process-based model for colluvial soil depth and shallow landsliding using digital elevation data: Hydrological Processes Vol. 9, pp. 383–400. 
+
+Han, X., Liu, J., Mitra, S. Li, X., Srivastava, P., Guzman, S.M., Chen, X., 2018, Selection of optimal scales for soil depth prediction on headwater hillslopes: A modeling approach: Catena, v. 163, p. 257-275, https://doi.org/10.1016/j.catena.2017.12.026.
 
 Ho, J.-Y.; Lee, K.T.; Chang, T.-C.; Wang, Z.-Y.; and Liao, Y.-H., 2012, Influences of spatial distribution of soil thickness on shallow landslide prediction: Engineering Geology, Vol. 124, pp. 38–46.
 
