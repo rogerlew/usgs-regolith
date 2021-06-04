@@ -17,7 +17,7 @@ contains
   character(len=224):: elfoldr
   character (len=31):: scratch
   character (len=8):: model_dscrp
-  character (len=4):: valid_model_id(13), model_type, lin_num
+  character (len=4):: valid_model_id(14), model_type, lin_num
   logical:: ans, reset_flag, id_valid, out_of_range
 ! FORMAL ARGUMENTS 
   integer, intent(in):: ulog,uini
@@ -42,7 +42,7 @@ contains
   init='rg_in.txt'; init = adjustl(init)
   ans=.false.; reset_flag=.false.
   valid_model_id=(/'DRS1','DRS2','DRS3','LCSD','NASD','NDSD','NSD ','NSDA',&
-                &'WNDX','ESD ','ECSD','PSD ','LASD'/)
+                &'WNDX','ESD ','ECSD','PSD ','LASD', 'LRSC'/)
   inquire (file=trim(init),exist=ans)
   if(ans) then
     open (uini,file=trim(init),status='old',err=201)
@@ -66,7 +66,7 @@ contains
 !    write(*,*) trans_model, l_mode
 ! Test for valid model ID code
   id_valid=.false.
-  do i=1,13
+  do i=1,14
     if(trim(trans_model) == trim(adjustl(valid_model_id(i)))) id_valid=.true.
   end do
   if(.not. id_valid) then
@@ -92,7 +92,7 @@ contains
   ! LASD model is WNDX
   if(trim(trans_model) == trim(adjustl(valid_model_id(13)))) trans_model=valid_model_id(9)
 !  Identify model type
-  if(trans_model(1:3) == 'DRS' .or. trans_model == 'WNDX') then
+  if(trans_model(1:3) == 'DRS' .or. trans_model == 'WNDX' .or. trans_model(1:2) == 'LR') then
     model_type = 'EMPR' ! Empirical
   else
     model_type = 'PROC' ! Process-based

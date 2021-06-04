@@ -2,7 +2,7 @@ REG = regolith
 
 OBJT90 = 
 OBJT95 = regolini.o aspect.o dbisect.o derose.o gauss_aprx.o grid_count.o grid_size.o hsolve.o \
-         laplacian.o lcsd_depth.o nasd_depth.o ndsd_depth.o nsd_a_depth.o nsd_depth.o \
+         laplacian.o lcsd_depth.o lrsc_depth.o nasd_depth.o ndsd_depth.o nsd_a_depth.o nsd_depth.o \
          regolith_main.o rgbanner.o ssizgrd.o wetness_ndx.o xyslope.o
 OBJT77 = irdgrd.o isvgrd.o srdgrd.o ssvgrd.o
 

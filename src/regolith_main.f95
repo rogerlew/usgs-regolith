@@ -1,5 +1,5 @@
 ! program to compute soil depth using various topographically based models
-! by Rex L. Baum, U.S. Geological Survey, January 2015
+! by Rex L. Baum, U.S. Geological Survey, January 2015 - June 2021
 ! VARIABLE DEFINITIONS
 ! celsiz -- grid cell spacing/width
 ! chan_thresh -- threshold value of upslope contributing area for channels
@@ -118,7 +118,7 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='0.9.01b'; bldate='04 May 2021'
+  vrsn='0.9.02a'; bldate='04 Jun 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -496,6 +496,25 @@ program regolith
       & depth_min,C0,C1,C2,zo,max_zones,power) ! DeRose exponential formula with curvature 
     case('WNDX'); call wetness_ndx(u(1),imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,&
       & contrib_area,slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power) ! Modified wetness index 
+    case('LRSC') ! Linear regression slope- and curvature-based formula
+      if (l_deriv .or. l_mode) then
+        allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
+        d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
+        call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
+           & celsiz,celsiz,no_data_64,no_data_int)
+      end if
+      if(l_mode) then ! Pass 2nd derivatives from laplacian subroutine.
+        call lrsc_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,&
+        & chan_thresh,chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,mag_del_z,slope_rad,&
+        & contrib_area,soil_depth,C0,C1,C2,depth_max,depth_min,&
+        & unused,del2gs,d2zdx2gs,d2zdy2gs,zo,max_zones,l_mode)
+      else ! Compute 2nd derivatives from 1st derivatives for greater smoothing.
+        allocate(del2gs(imax)); del2gs=0.
+        call lrsc_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,&
+        & chan_thresh,chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,mag_del_z,slope_rad,&
+        & contrib_area,soil_depth,C0,C1,C2,depth_max,depth_min,&
+        & unused,del2gs,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode)
+      endif
     case('LCSD') ! Classic curvature-based formula
       if (l_deriv .or. l_mode) then
         allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
