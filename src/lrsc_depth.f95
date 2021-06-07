@@ -1,5 +1,5 @@
 ! Procedure to compute soil depth based on Linear Regression Slope and Curvature  model
-! 4 June 2021, RLB, Latest revision 4 Jun 2021, RLB.
+! 4 June 2021, RLB, Latest revision 7 Jun 2021, RLB.
   subroutine lrsc_depth(ulog,imax,ncol,nrow,grd,celsiz,no_data_64,no_data_int,cta,&
     & chan_thresh,chan_depth,theta_c_rad,pf1,dz_gs_dx,dz_gs_dy,mag_del_z,slope_rad,&
     & contrib_area,soil_depth,C0,C1,C2,depth_max,depth_min,&
@@ -8,7 +8,7 @@
 ! LOCAL VARIABLES
     integer:: i, chan_ctr
     real ::soil_depth_min, soil_depth_max
-    real::h1, sc
+    real::h1, h2, sc
 ! FORMAL ARGUMENTS
     integer, intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cta(ncol,nrow),max_zones,zo(imax)
     real, intent(in):: C0(max_zones), C1(max_zones), C2(max_zones)
@@ -32,12 +32,14 @@
       sc = tan(theta_c_rad(zo(i)))
       if (mag_del_z(i) > sc) then
         h1 = 0. ! no contribution above critical slope
+        h2 = 0.
       else
         h1 = C2(zo(i)) * (sc - mag_del_z(i))
+        h2 = C0(zo(i)) + C1(zo(i)) * Laplacian(i) 
       end if
-      soil_depth(i)=C0(zo(i)) + C1(zo(i)) * Laplacian(i) + h1
+      soil_depth(i)= h1 + h2
       if(soil_depth(i) < depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
-      if(soil_depth(i)>depth_max(zo(i)) ) soil_depth(i)=depth_max(zo(i))
+      if(soil_depth(i) > depth_max(zo(i)) ) soil_depth(i)=depth_max(zo(i))
 ! Compare slope angle in channels with 0.1*critical slope angle, and reduce thickness accordingly.
       if(contrib_area(i)>chan_thresh) then 
          if(slope_rad(i)>0.1*theta_c_rad(zo(i))) then
