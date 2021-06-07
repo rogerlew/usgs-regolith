@@ -61,11 +61,12 @@ Inputs used by each soil depth model
 
 Model code,     Description and reference(s)
 -----------------------------------------------
-- DRS1:         Empirical exponential slope dependence (DeRose et al. 1991)
-- DRS2:         Empirical 3rd-degree polynomial slope dependence (DeRose et al. 1991)
-- DRS3:         Empirical exponential slope and sign of plan-view curvature dependence (Baum et al. 2011)
-- WNDX:         Modified soil wetness index, linear area dependent transport (Ho et al. 2012)
-- LCSD:         Linear curvature and slope dependent transport (Pelletier & Rasmussen, 2009; Pelletier et al. 2016)
+- DRS1:         Empirical exponential slope dependence (DeRose and others 1991)
+- DRS2:         Empirical 3rd-degree polynomial slope dependence (DeRose and others 1991)
+- DRS3:         Empirical exponential slope and sign of plan-view curvature dependence (Baum and others 2011)
+- WNDX:         Modified soil wetness index, linear area dependent transport (Ho and others 2012)
+- LRSC:         Linear regression slope and curvature (combines Patton and others 2018 with linear slope)
+- LCSD:         Linear curvature and slope dependent transport (Pelletier & Rasmussen, 2009; Pelletier and others 2016)
 - NSD:          Nonlinear slope dependent transport (Pelletier & Rasmussen, 2009)
 - NSDA:         Nonlinear slope dependent transport with linear area dependence (Pelletier & Rasmussen, 2009)
 - NASD:         Nonlinear slope and area dependent transport (Pelletier & Rasmussen, 2009)
@@ -102,6 +103,7 @@ Process-based model formula parameters and REGOLITH input parameter names (if ap
 | DRS2 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) | DeRose (1996)\* |
 | DRS3 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B2%7Dsgn%28%5Ckappa%20%29%29e%5E%7B-C_%7B1%7D%5Ctheta%20%7D) | Baum and others (2011) |
 | WNDX | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20C_%7B0%7Dln%28%5Cfrac%7BA%5E%7Bp%7D%7D%7Btan%28%5Ctheta%29%7D%29) | Ho and others (2012)\* |
+| LRSC |![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20=%20C_%7B0%7D&plus;C_%7B1%7D%5Cbigtriangledown%20%5E%7B2%7Dz&plus;C_%7B2%7D(S_%7Bc%7D-%7C%5Cbigtriangledown%20z%7C),%20(S_%7Bc%7D-%7C%5Cbigtriangledown%20z%7C)%3E0;%20%20%20d_%7Br%7D%20=%20C_%7B0%7D&plus;C_%7B1%7D%5Cbigtriangledown%20%5E%7B2%7Dz,%20(S_%7Bc%7D-%7C%5Cbigtriangledown%20z%7C)%5Cleq%200%20)| modified from Patton and others (2018) |
 | LCSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BLCSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5E%7B2%7Dz%7D%29) | Pelletier and Rasmussen (2009) |
 | NSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) | Pelletier and Rasmussen (2009) |
 | NSDA |  ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSDA%7DA%5E%7B-m%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) |  Pelletier and Rasmussen (2009)\*\* |
@@ -112,7 +114,7 @@ Process-based model formula parameters and REGOLITH input parameter names (if ap
  \*\*The NSDA model is a hybrid of the NSD model (Pelletier and Rasmussen, 2009) and linear dependence on upslope contributing area.
  
  ### Notes about model formulas  
- The formulas for the soil-production and transport (process-based) models, LCSD, NSD, NSDA, NASD, and NDSD, listed above present the theoretical formulas (Pelletier and Rasmussen, 2009).  However REGOLITH implements modified forms of these formulas for the purpose of improving model results.  The LCSD, NSD, NSDA, and NASD models are capable of computing soil depth only where the ground surface is convex upward (Pelletier and Rasmussen, 2009; Patton et al., 2018), such as knobs and ridges, which limits their usefulness for computing soil depth in many potential landslide source areas.  Source areas for shallow landslides occur far more commonly on planar and concave slopes than on convex slope.  In addition, these models tend to produce noisy soil-depth estimates on high-resolution topography.  
+ The formulas for the soil-production and transport (process-based) models, LCSD, NSD, NSDA, NASD, and NDSD, listed above present the theoretical formulas (Pelletier and Rasmussen, 2009).  However REGOLITH implements modified forms of these formulas for the purpose of improving model results.  The LCSD, NSD, NSDA, and NASD models are capable of computing soil depth only where the ground surface is convex upward (Pelletier and Rasmussen, 2009; Patton and others, 2018), such as knobs and ridges, which limits their usefulness for computing soil depth in many potential landslide source areas.  Source areas for shallow landslides occur far more commonly on planar and concave slopes than on convex slope.  In addition, these models tend to produce noisy soil-depth estimates on high-resolution topography.  
  
  Some simple changes were made to address the need for estimating soil depth on planar and concave slopes.  In "original" or "test" mode, we have deleted the negative sign in the argument of the log function so that the model estimates depth where the ground surface is concave upward.   In "modified" mode the formulas for the LCSD and NSD have been adjusted to compute soil depth where the ground surface is either concave or convex, by using the absolute value of the argument of the log function.  For the NSDA and NASD models in modified mode, we have inverted the argument of the log function and taken its absolute value (before computing the logarithm) to esitmate soil depth where the ground surface is either concave or convex and create an effect of soil accumulating in concave areas.  Consequently, the valid range of values for the diffusivity ratio for these two models differs greatly from the expected range for the unmodified versions of the models.  We recognise that the modifications of the process-based model formulas implemented in REGOLITH violate some of the original assumptions of the sediment transport theories upon which the models are based. However, the purpose of the modifications is to find practical solutions for estimating soil depth on landslide prone hillsides for hazard assessment, rather than modeling landscape evolution.  
  
@@ -124,6 +126,7 @@ Model code,    Required input parameters
 - DRS2:         `theta_c, depth_min, depth_max, C0, C1, power, chan_thresh, chan_depth`
 - DRS3:         `theta_c, depth_min, depth_max, C0, C1, C2, chan_thresh, chan_depth`
 - WNDX:         `theta_c, depth_min, depth_max, C0, power, chan_thresh, chan_depth`
+- LRSC:         `theta_c, depth_min, depth_max, C0, C1, C2, chan_thresh, chan_depth`
 - LCSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, l_mode`
 - NSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, l_mode`
 - NSDA:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, power, l_mode`
@@ -136,6 +139,7 @@ Model code,    Required input files
 - DRS2:          `elevfil, slopefil `
 - DRS3:          `elevfil, slopefil, pv_curvfil`
 - WNDX:          `elevfil, slopefil, flo_accfil`
+- LRSC:          `elevfil, slopefil `
 - LCSD:          `elevfil, slopefil `
 - NSD:           `elevfil, slopefil `
 - NSDA:          `elevfil, slopefil, flo_accfil`
@@ -175,7 +179,7 @@ The following table outlines the prefixes of the output files created within the
 
 Suggested input parameter values for empirical models
 -----------------------------------------------
-The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic deposits in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose et al. (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho et al. (2012) are provided.  Note that `depth_max` and `depth_min` have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
+The following table displays the full ranges of parameters used in running the program successfully with the empirical models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were determined at sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic deposits in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020).  Additionally, parameters from a study area in Eastern Taranaki hill country (sandstone in humid temperate setting) in the North Island of New Zealand as gathered in DeRose and others (1991) and DeRose (1996) and from a study area in the Tung-An watershed in southern Taiwan (sandstone and shale in a marine tropical to humid temperate setting) as gathered in Ho and others (2012) are provided.  Note that `depth_max` and `depth_min` have been omitted from the subsequent tables as these will vary regardless of the climate and geology, however, a value still must be provided for these parameters when running the program with the empirical models.
 
 | `trans_model` | `theta_c` (degrees) | `depth_min` (m) |`depth_max` (m) | `C0` | `C1` |  `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
@@ -183,6 +187,7 @@ The following table displays the full ranges of parameters used in running the p
 | DRS2 | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 3 | 0.01 - 0.06 | — | 1 - 3 |
 | DRS3 | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 5 | 0.01 - 0.06 | 1.5 | — |
 | WNDX | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.1 - 1 | — | — | 1 - 2 |
+| LRSC | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.5 - 1.1 | 0 - 21 | 0 - 1 | — |
 
 
 Continental glacial deposits in humid temperate setting
@@ -224,14 +229,14 @@ Granitoid in humid tropical setting, Tello (2020)
 | DRS2 | 50 - 60 | 1 - 3 | 0.01 - 0.03 | — | 3 |
 | WNDX | 50 - 60 | 0.1 - 0.3 | — | — | 1 |
 
-Sandstone in humid temperate setting, DeRose and others (1991), DeRose (1996) and Baum et al. (2011)
+Sandstone in humid temperate setting, DeRose and others (1991), DeRose (1996) and Baum and others (2011)
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | DRS1 | 30 - 60 | 50.0 | 0.124 | — | — | 
 | DRS2 | 30 - 60 | 1.57 - 1.68 | 0.019 - 0.022 | — | 3 |
 | DRS3 | 30 - 60 | 5.0 | 0.04 | 1.5 | — |
 
-Clastic sedimentary in a marine tropical to humid temperate setting, Ho et al. (2012)
+Clastic sedimentary in a marine tropical to humid temperate setting, Ho and others (2012)
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | WNDX | 30 - 60 | 0.1- 0.3 | — | — | 1 |
@@ -314,7 +319,7 @@ Upslope contributing area
 ------------------------------
 Various algorithms are available in commercial and open-source GIS software for computing the upslope contributing area.  As described previously, the measure of upslope contributing area used in REGOLITH is flow accumulation, the count of upslope grid cells.  Study-area boundaries rarely follow boundaries of drainage basins.  Consequently, drainage basins may be truncated causing computed flow accumulation near the edges of study areas to be incorrect.  With some algorithms, the flow-accumulation errors propagate hundreds or thousands of meters along major drainage channels.  Enlarging the study area to include heads of all drainage basins in the study area can help avoid such errors.  If enlarging to such an extent is not practical or feasible, then adding a perimeter buffer 100 - 500 m wide on all sides can greatly reduce the errors within the actual study area.  
 
-Different software tools can help mitigate the flow-accumulation errors resulting from truncated drainage basins. For example, TauDEM (http://hydrology.usu.edu/taudem) has a feature for checking for "edge contamination" that can identify areas likely affected by flow-accumulation errors.  Although REGOLITH cannot  directly use of the additional edge contamination grid produced by TauDEM, the information can help the user recognize trouble spots and devise strategies to mitigate them.  Limited experience indicates that flow accumulation results (including how flow accumulation errors propagate from DEM edges) vary with different algorithms and software.  
+Different software tools can help mitigate the flow-accumulation errors resulting from truncated drainage basins. For example, TauDEM (http://hydrology.usu.edu/taudem) has a feature for checking for "edge contamination" that can identify areas likely affected by flow-accumulation errors.  Although REGOLITH cannot  directly use the additional edge contamination grid produced by TauDEM, the information can help the user recognize trouble spots and devise strategies to mitigate them.  Limited experience indicates that flow accumulation results (including how flow accumulation errors propagate from DEM edges) vary with different algorithms and software.  
  
 Optional property zones
 -----------------------
