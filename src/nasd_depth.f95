@@ -44,7 +44,7 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
     do i=1,imax
       trans_nasd=d_trans_x_dx(i)+d_trans_y_dy(i)
       unused(i) = trans_nasd
-      if (trans_nasd < 0.) cycle ! Avoid negative arguments of log() 
+      if (trans_nasd*dif_ratio(zo(i)) < 0.) cycle ! Avoid negative arguments of log() 
       if (abs(trans_nasd) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       cycl_ctr=cycl_ctr+1
       if (hump_prod(zo(i))) then

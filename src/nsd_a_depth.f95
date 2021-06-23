@@ -36,7 +36,7 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
       if(power /= 1. .and. aexpn /= 0.) aexpn=aexpn**power
       if(ncol == 1 .or. nrow == 1) aexpn=sqrt(aexpn)
       if (abs(trans_nsd*aexpn) <=tis) cycle ! avoid division by zero
-      if (trans_nsd*aexpn < 0.) cycle ! avoid negative argument for log() 
+      if (trans_nsd*aexpn*dif_ratio(zo(i)) < 0.) cycle ! avoid negative argument for log() 
       if (hump_prod(zo(i))) then ! use humped soil production funtion
         h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) 
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_mode)

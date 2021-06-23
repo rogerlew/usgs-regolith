@@ -33,7 +33,7 @@ subroutine nsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_t
     do i=1,imax
       trans_nsd=d_trans_x_dx(i)+d_trans_y_dy(i)
       unused(i) = trans_nsd
-      if (trans_nsd < 0.) cycle  ! Avoid negative arguments of log()
+      if (trans_nsd*dif_ratio(zo(i)) < 0.) cycle  ! Avoid negative arguments of log()
       if (abs(trans_nsd) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       if (hump_prod(zo(i))) then
         h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_nsd) 

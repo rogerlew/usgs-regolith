@@ -251,6 +251,13 @@ contains
         else
           msg(3) = ''
         end if
+        if(h0(iz) < 0.)then
+          out_of_range = .true.
+          write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+          msg(4)='Model parameter h0 < 0 at '//trim(lin_num)//' of '//trim(init)
+        else
+          msg(4) = ''
+        end if
       else
         if(depth_max (iz) < 0. .or. depth_min(iz) < 0. .or. depth_min(iz) > depth_max(iz))then
           out_of_range = .true.
@@ -259,14 +266,14 @@ contains
         else
           msg(3) = ''
         end if
+        if(h0(iz) < 0. .or. dif_ratio(iz) < 0.)then
+          out_of_range = .true.
+          write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
+          msg(4)='Model parameter h0, or dif_ratio < 0 at '//trim(lin_num)//' of '//trim(init)
+        else
+          msg(4) = ''
+        end if
       endif
-      if(h0(iz) < 0. .or. dif_ratio(iz) < 0.)then
-        out_of_range = .true.
-        write(lin_num,'(i4)') linct; lin_num = adjustl(lin_num)
-        msg(4)='Model parameter h0, or dif_ratio < 0 at '//trim(lin_num)//' of '//trim(init)
-      else
-        msg(4) = ''
-      end if
       if(out_of_range)then
         outfil='RegolithLog.txt'; outfil=adjustl(outfil)
         open (ulog,file=trim(outfil),status='unknown',err=212)
@@ -279,14 +286,14 @@ contains
         write(*,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
         write(ulog,*) 'Edit ',trim(init), ' to correct these errors, then restart program.'
         close(uini); close(ulog)
-        stop 'regolini.f95, line 222 - 282'
+        stop 'regolini.f95, line 222 - 289'
       end if
       linct=linct+1
       sc(iz)=tan(theta_c_deg(iz)*dg2rad) ! convert angle of stability to radians and compute tangent
     end do
   case default ! undefined model type
     write(*,*) 'Model type is undefined.'
-    stop 'regolini.f95, line 289'  
+    stop 'regolini.f95, line 296'  
   end select
 ! Model exponent
     read (uini,'(a)',err=202) heading(8); linct=linct+1
@@ -297,7 +304,7 @@ contains
       write(ulog,*) 'Absolute value of exponent too big, |power| > 10.0: ', power
       write(ulog,*) 'Revise value of <power> in rg_in.txt and restart'
       close(uini); close(ulog) 
-      stop 'regolini.f95, lines 294 - 300'  
+      stop 'regolini.f95, lines 299 - 307'  
     endif
     if(abs(power) < 0.1) then
       write(*,*) 'Absolute value of exponent too small, |power| < 0.1: ', power
@@ -305,7 +312,7 @@ contains
       write(ulog,*) 'Absolute value of exponent too small, |power| < 0.1: ', power
       write(ulog,*) 'Revise value of <power> in rg_in.txt and restart'
       close(uini); close(ulog) 
-      stop 'regolini.f95, lines 302 - 308'  
+      stop 'regolini.f95, lines 309 - 315'  
     endif
 !  path names of input files
     read (uini,'(a)',err=202) heading(9); linct=linct+1
@@ -376,7 +383,7 @@ contains
     write(*,*) 'Create directory ', trim(elfoldr)
     write(*,*) 'or edit ', trim(init), ' to correct the directory path name'
     write(*,*) '(input variable "elevfil"), then restart program.'
-    stop 'regolini.f95, line 352 - 379'
+    stop 'regolini.f95, line 359 - 386'
   end if
   write (ulog,*) ''
   write (ulog,*) 'Starting Regolith ', vrsn,' ',bldate
@@ -489,7 +496,7 @@ contains
     write (ulog,*) 'Check file location and name'
     write(*,*) 'Press RETURN to exit'
     read*
-  stop '201 in regolini.f95 (line 475 - 492)'
+  stop '201 in regolini.f95 (line 482 - 499)'
   202  continue
 ! Report error reading initialization file.
     write (*,*) ''
@@ -507,7 +514,7 @@ contains
     write (ulog,*) 'Check file contents and organization'
     write(*,*) 'Press RETURN to exit'
     read*
-  stop '202 in regolini.f95 (line 493 - 510)'
+  stop '202 in regolini.f95 (line 500 - 517)'
   211  continue
     write (*,*) ''
     write (*,*) '*** Error opening output file in subroutine regolini() ***'
@@ -520,7 +527,7 @@ contains
     write (ulog,*) 'Check file path and directory status'
     write(*,*) 'Press RETURN to exit'
     read*
-  stop '211 in regolini.f95 (line 511 - 523)'
+  stop '211 in regolini.f95 (line 518 - 530)'
   212  continue
     write (*,*) ''
     write (*,*) '*** Error opening output file in subroutine regolini() ***'
@@ -528,7 +535,7 @@ contains
     write (*,*) 'Check file path and status'
     write(*,*) 'Press RETURN to exit'
     read*
-  stop '212 in regolini.f95 (line 524 - 531)'
+  stop '212 in regolini.f95 (line 531 - 538)'
   end subroutine regolini
   
 end module read_inputs

@@ -29,7 +29,7 @@ subroutine lcsd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
   if(l_mode) then ! Original mode consistent with analytical solutionss
     do i=1,imax
       trans_lcsd=d_trans_x_dx(i)+d_trans_y_dy(i) ! 2nd derivatives passed directly from main program.
-      if (trans_lcsd < 0.) cycle ! Avoid negative argument of log() 
+      if (trans_lcsd*dif_ratio(zo(i)) < 0.) cycle ! Avoid negative argument of log() 
       if (abs(trans_lcsd) <= 0.0001) cycle ! Avoid division by zero and very small numbers
       if (hump_prod(zo(i))) then
         h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/trans_lcsd) 
