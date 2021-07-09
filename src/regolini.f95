@@ -42,7 +42,7 @@ contains
   init='rg_in.txt'; init = adjustl(init)
   ans=.false.; reset_flag=.false.
   valid_model_id=(/'DRS1','DRS2','DRS3','LCSD','NASD','NDSD','NSD ','NSDA',&
-                &'WNDX','ESD ','ECSD','PSD ','LASD', 'LRSC'/)
+                &'WNDX','ESD ','CESD','PSD ','LASD', 'LRSC'/)
   inquire (file=trim(init),exist=ans)
   if(ans) then
     open (uini,file=trim(init),status='old',err=201)
@@ -84,18 +84,18 @@ contains
   endif
 ! Translate alternate model codes to internal codes  
   ! ESD model is DRS1
-  if(trim(trans_model) == trim(adjustl(valid_model_id(10)))) trans_model=valid_model_id(1)
-  ! ESCD model is DRS3
-  if(trim(trans_model) == trim(adjustl(valid_model_id(11)))) trans_model=valid_model_id(3)
+  if(trim(trans_model) == trim(adjustl(valid_model_id(1)))) trans_model=valid_model_id(10)
+  ! CESD model is DRS3
+  if(trim(trans_model) == trim(adjustl(valid_model_id(3)))) trans_model=valid_model_id(11)
   ! PSD model is DRS2
-  if(trim(trans_model) == trim(adjustl(valid_model_id(12)))) trans_model=valid_model_id(2)
+  if(trim(trans_model) == trim(adjustl(valid_model_id(2)))) trans_model=valid_model_id(12)
   ! LASD model is WNDX
-  if(trim(trans_model) == trim(adjustl(valid_model_id(13)))) trans_model=valid_model_id(9)
+  if(trim(trans_model) == trim(adjustl(valid_model_id(9)))) trans_model=valid_model_id(13)
 !  Identify model type
-  if(trans_model(1:3) == 'DRS' .or. trans_model == 'WNDX' .or. trans_model(1:2) == 'LR') then
-    model_type = 'EMPR' ! Empirical
-  else
+  if(trans_model(1:1) == 'N' .or. trans_model(1:2) == 'LC') then
     model_type = 'PROC' ! Process-based
+  else
+    model_type = 'EMPR' ! Empirical
   endif
 ! Channel parameters   
     read (uini,'(a)',err=202) heading(3); linct=linct+1
@@ -365,7 +365,7 @@ contains
     suffix=adjustl(suffix)
     trans_model=adjustl(trans_model)
 !    outfil=trim(folder)//'RG_Log_'//trim(trans_model)//'_'//trim(suffix)//'.txt'
-    if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then
+    if(trans_model(1:1)=='N' .or. trans_model(1:2)=='LC') then
       if(l_mode) then
         model_dscrp=trim(trans_model)//'_anl' ! Original mode based on analytic formula
       else

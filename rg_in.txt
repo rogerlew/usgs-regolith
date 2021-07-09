@@ -1,6 +1,6 @@
 # Program regolith, v.1.0, to estimate regolith thickness from topography
 Synthetic DEM
-# Transport model (trans_model) use codes, 'DRS1', 'DRS2', 'DRS3', 'WNDX', 'LRSC', 'NSD', 'NASD', 'NSDA', 'LCSD', or 'NDSD'; Original mode?
+# Transport model (trans_model) use codes, 'ESD', 'PSD', 'CESD', 'LASD', 'LRSC', 'NSD', 'NASD', 'NSDA', 'LCSD', or 'NDSD'; Original mode?
 NSD, .true.
 # Channel parameters: chan_thresh, chan_depth
 2000000., 0.5

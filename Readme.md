@@ -1,6 +1,12 @@
 README
 ======
 
+REGOLITH--A Fortran 95 program for estimating soil mantle thickness in a digital landscape for landslide and debris-flow hazard assessment
+======
+Citation
+---------
+Baum, R.L., Bedinger, E.C., and Tello, M.J., 2021, REGOLITH--A Fortran 95 program for estimating soil mantle thickness in a digital landscape for landslide and debris-flow hazard assessment:  U.S. Geological Survey Software Release, https://doi.org/10.5066/P9U2RDWJ
+
 Description
 -----------
 The computer program REGOLITH is a Fortran program designed for estimating soil thickness over a digital landscape.  The program implements various published empirical and process-based models for soil thickness.  This command-line program is used in conjunction with Python scripts to prepare input files and automate certain steps.
@@ -15,7 +21,7 @@ A makefile in the src directory can be used to compile the Fortran source code. 
 
 Using the program
 -----------------
-The program runs from the command line and can be compiled for any operating system that supports Fortran 95.  The user provides a parameter input file, *rg_in.txt*, containing a list of model parameters and path names for other input files.  The digital elevation model and related user-provided input files, slope, upslope contributing area, elevation index, plan-view curvature, and property zone are raster grids in ASCII grid format.  All input grids must have the same spatial reference, resolution, and footprint.  Input file requirements vary depending on the selected soil model (see Required input files, below); however, each model requires a user provided DEM. The NDSD model requires an elevation index grid, which can be created by the utility program TopoIndex (distributed with TRIGRS).  Source code and executabe files for TopoIndex are available at https://code.usgs.gov/usgs/landslides-trigrs.  For the DRS3 model, a user-supplied plan-view curvature grid, which can be created using Geographic Information System (GIS) software, is also needed. The NASD, NSDA, and WNDX models require a flow-accumulation grid (count of upslope grid cells) which can additionally be created using GIS software.  While each model will utilize a grid of slope angle values, the program can compute this and optionally output the grid if one does not exist or if the user specifies topographic smoothing.  The outputted slope grid can be used in future iterations within the same study area to improve computation time.  In addition to a grid of slope angle values, the program outputs a log file, an ASCII grid of computed soil depth, and optional grids of various intermediate values (see Output files, below).
+The program runs from the command line and can be compiled for any operating system that supports Fortran 95.  The user provides a parameter input file, *rg_in.txt*, containing a list of model parameters and path names for other input files.  The digital elevation model and related user-provided input files, slope, upslope contributing area, elevation index, plan-view curvature, and property zone are raster grids in ASCII grid format.  All input grids must have the same spatial reference, resolution, and footprint.  Input file requirements vary depending on the selected soil model (see Required input files, below); however, each model requires a user provided DEM. The NDSD model requires an elevation index grid, which can be created by the utility program TopoIndex (distributed with TRIGRS).  Source code and executabe files for TopoIndex are available at https://code.usgs.gov/usgs/landslides-trigrs.  For the CESD model, a user-supplied plan-view curvature grid, which can be created using Geographic Information System (GIS) software, is also needed. The NASD, NSDA, and LASD models require a flow-accumulation grid (count of upslope grid cells) which can additionally be created using GIS software.  While each model will utilize a grid of slope angle values, the program can compute this and optionally output the grid if one does not exist or if the user specifies topographic smoothing.  The outputted slope grid can be used in future iterations within the same study area to improve computation time.  In addition to a grid of slope angle values, the program outputs a log file, an ASCII grid of computed soil depth, and optional grids of various intermediate values (see Output files, below).
 
 Input parameter definitions
 ---------------------------
@@ -25,7 +31,7 @@ Name,         Type,      Description
 ----------------------------------
 - `title`        char,      Brief description of project, up to 224 characters
 - `trans_model`  char,      Alpha-numeric code to designate soil depth or transport model 
-- Legal values of `trans_model`: DRS1, DRS2, DRS3, WNDX, LCSD, NSD, NSDA, NASD, or NDSD
+- Legal values of `trans_model`: ESD, PSD, CESD, LASD, LCSD, NSD, NSDA, NASD, or NDSD
 - `l_mode`       logical,   Switch between original mode and modified mode for the LCSD, NASD, NSDA, and NSD models.  Original mode is based on analytical formulas derived by combining soil production models with sediment transport theory (Dietrich and others, 1995; Pelletier and Rasmussen, 2009).  This mode is used for comparison with analytical solutions (to test program operation) as well as for mapping soil depth.  Modified mode is based on slight adjustments to the original analytical formulas and and is available for mapping soil depths in digital representations of natural terrain.  Modified mode computes soil depth distributions that may overcome some of the effects of small scale roughness in high-resolution DEMs without needing to smooth them.
 - `chan_thresh`  float,     Threshold (minimum) upslope contributing area at channel heads, >0.
 - `chan_depth`   float,     Average steady-state depth of alluvium in channels steeper than `0.1*theta_c` (based on our observations that alluvium in channels steeper than about 10&deg; is typically leq; 0.5 m).
@@ -41,7 +47,7 @@ Name,         Type,      Description
 - `h0`           float,     Characteristic soil depth, typically 0.3 - 0.5 m
 - `dif_ratio`    float,     Diffusivity ratio, >0., (&rho;<sub>b</sub> x P<sub>0</sub>)/(&rho;<sub>s</sub> x D), where D is soil diffusivity, &rho;<sub>b</sub> and &rho;<sub>s</sub> are density of bedrock and soil, respectively, and P<sub>0</sub> is maximum bedrock lowering rate on a flat surface.
 - `hump_prod`    logical,   Use humped soil production function? (enabled if `.true.` or disabled if `.false.`)
-- `power`        float,   Exponent of DRS2 polynomial or of upslope area in NASD, NSDA, and WNDX models, typicaly -5.0 leq; `power` leq; 5.0.
+- `power`        float,   Exponent of PSD polynomial or of upslope area in NASD, NSDA, and LASD models, typicaly -5.0 leq; `power` leq; 5.0.
 - `elevfil`      char,      File path name of digital elevation grid (<=255 characters)
 - `slopefil`     char,      File name of slope angle grid (in degrees) (<=255 characters)
 - `flo_accfil`   char,      File name of flow-accumulation grid in units of number of cells, ArcGIS convention (<=255 characters)
@@ -61,10 +67,10 @@ Inputs used by each soil depth model
 
 Model code,     Description and reference(s)
 -----------------------------------------------
-- DRS1:         Empirical exponential slope dependence (DeRose and others 1991)
-- DRS2:         Empirical 3rd-degree polynomial slope dependence (DeRose and others 1991)
-- DRS3:         Empirical exponential slope and sign of plan-view curvature dependence (Baum and others 2011)
-- WNDX:         Modified soil wetness index, linear area dependent transport (Ho and others 2012)
+- ESD:         Empirical exponential slope dependence (DeRose and others 1991)
+- PSD:         Empirical 3rd-degree polynomial slope dependence (DeRose and others 1991)
+- CESD:         Empirical exponential slope and sign of plan-view curvature dependence (Baum and others 2011)
+- LASD:         Modified soil wetness index, linear area and slope dependent transport (Ho and others 2012)
 - LRSC:         Linear regression slope and curvature (combines Patton and others 2018 with linear slope)
 - LCSD:         Linear curvature and slope dependent transport (Pelletier & Rasmussen, 2009; Pelletier and others 2016)
 - NSD:          Nonlinear slope dependent transport (Pelletier & Rasmussen, 2009)
@@ -81,7 +87,7 @@ Empirical model formula parameters and REGOLITH input parameter names (if applic
 - *C*<sub>*1*</sub>,     empirical constant (C1)
 - *C*<sub>*2*</sub>,     empirical constant (C2)
 - &theta;,               slope angle, degrees
-- *p*,                   exponent of DRS2 polynomial or of upslope area (power)
+- *p*,                   exponent of PSD polynomial or of upslope area (power)
 - &kappa;,               plan-view curvature of ground surface, ArcGIS convention (-100 * curvature)
 - *A*,                   upslope contributing area, m<sup>2</sup>
 
@@ -99,10 +105,10 @@ Process-based model formula parameters and REGOLITH input parameter names (if ap
 
 | `trans_model` | Regolith depth formula |Citation|
 | ------ | ------ | ------ |
-| DRS1 | ![equation](https://latex.codecogs.com/svg.image?d_r%20=%20C_0e%5E%7B-C_1%5Ctheta%7D) | DeRose and others (1991) |
-| DRS2 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) | DeRose (1996)\* |
-| DRS3 | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B2%7Dsgn%28%5Ckappa%20%29%29e%5E%7B-C_%7B1%7D%5Ctheta%20%7D) | Baum and others (2011) |
-| WNDX | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20C_%7B0%7Dln%28%5Cfrac%7BA%5E%7Bp%7D%7D%7Btan%28%5Ctheta%29%7D%29) | Ho and others (2012)\* |
+| ESD | ![equation](https://latex.codecogs.com/svg.image?d_r%20=%20C_0e%5E%7B-C_1%5Ctheta%7D) | DeRose and others (1991) |
+| PSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B1%7D%5Ctheta%29%5E%7Bp%7D) | DeRose (1996)\* |
+| CESD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20%28C_%7B0%7D-C_%7B2%7Dsgn%28%5Ckappa%20%29%29e%5E%7B-C_%7B1%7D%5Ctheta%20%7D) | Baum and others (2011) |
+| LASD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%20%3D%20C_%7B0%7Dln%28%5Cfrac%7BA%5E%7Bp%7D%7D%7Btan%28%5Ctheta%29%7D%29) | Ho and others (2012)\* |
 | LRSC |![equation](https://latex.codecogs.com/svg.latex?d_%7Br%7D%20%3D%20C_%7B0%7D&plus;C_%7B1%7D%5Cbigtriangledown%20z&plus;C_%7B2%7D%5Cleft%20%28%20S_%7Bc%7D-%5Cleft%20%7C%20%5Cbigtriangledown%20z%20%5Cright%20%7C%20%5Cright%20%29%2C%20where%20%5Cleft%20%28%20S_%7Bc%7D-%5Cleft%20%7C%20%5Cbigtriangledown%20z%20%5Cright%20%7C%20%5Cright%20%29%3E0)| modified from Patton and others (2018) |
 | LCSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BLCSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5E%7B2%7Dz%7D%29) | Pelletier and Rasmussen (2009) |
 | NSD | ![equation](https://latex.codecogs.com/svg.image?d_%7Br%7D%3D%5Cfrac%7Bh_%7B0%7D%7D%7Bcos%28%5Ctheta%29%7Dln%28-%5Cfrac%7BD_%7BNSD%7D%7D%7Bcos%28%5Ctheta%29%5Ctriangledown%5Ccdot%20%5Cfrac%7B%5Ctriangledown%20z%7D%7B1-%28%5Cfrac%7B%7C%5Ctriangledown%20z%7C%7D%7BS_%7Bc%7D%7D%29%5E%7B2%7D%7D%7D%29) | Pelletier and Rasmussen (2009) |
@@ -122,10 +128,10 @@ Process-based model formula parameters and REGOLITH input parameter names (if ap
 
 Model code,    Required input parameters
 -----------------------------------------------
-- DRS1:         `theta_c, depth_min, depth_max, C0, C1, chan_thresh, chan_depth`
-- DRS2:         `theta_c, depth_min, depth_max, C0, C1, power, chan_thresh, chan_depth`
-- DRS3:         `theta_c, depth_min, depth_max, C0, C1, C2, chan_thresh, chan_depth`
-- WNDX:         `theta_c, depth_min, depth_max, C0, power, chan_thresh, chan_depth`
+- ESD:         `theta_c, depth_min, depth_max, C0, C1, chan_thresh, chan_depth`
+- PSD:         `theta_c, depth_min, depth_max, C0, C1, power, chan_thresh, chan_depth`
+- CESD:         `theta_c, depth_min, depth_max, C0, C1, C2, chan_thresh, chan_depth`
+- LASD:         `theta_c, depth_min, depth_max, C0, power, chan_thresh, chan_depth`
 - LRSC:         `theta_c, depth_min, depth_max, C0, C1, C2, chan_thresh, chan_depth`
 - LCSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, l_mode`
 - NSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, l_mode`
@@ -135,10 +141,10 @@ Model code,    Required input parameters
 
 Model code,    Required input files
 ------------------------------------------
-- DRS1:          `elevfil, slopefil `
-- DRS2:          `elevfil, slopefil `
-- DRS3:          `elevfil, slopefil, pv_curvfil`
-- WNDX:          `elevfil, slopefil, flo_accfil`
+- ESD:          `elevfil, slopefil `
+- PSD:          `elevfil, slopefil `
+- CESD:          `elevfil, slopefil, pv_curvfil`
+- LASD:          `elevfil, slopefil, flo_accfil`
 - LRSC:          `elevfil, slopefil `
 - LCSD:          `elevfil, slopefil `
 - NSD:           `elevfil, slopefil `
@@ -152,7 +158,7 @@ Input file variable name,   Contents
 - `slopefil`       Slope angle grid of type float
 - `flo_accfil `    A grid of upslope contributing area of type float in units of number of cells.  See comments in section titled "Upslope contributing area" (below).
 - `ndxfil`         A grid of integer values ranking grid cells in the digital elevation model from highest (1) to lowest (maximum number of data cells in the grid).  This grid is used only by the NDSD model to ensure that soil depth is computed in order from peaks and ridge crests down the slope to successively lower points as explained by Pelletier and Rasmussen (2009).  
-- ` pv_curvfil`    Plan-curvature grid of type float used only by the DRS3 model
+- ` pv_curvfil`    Plan-curvature grid of type float used only by the CESD model
 - `zonfil`         A grid of integer values identifying zones within the model where similar values of input parameters are to be applied.
 
 *Notes:* 
@@ -183,63 +189,63 @@ The following table displays the full ranges of parameters used in running the p
 
 | `trans_model` | `theta_c` (degrees) | `depth_min` (m) |`depth_max` (m) | `C0` | `C1` |  `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 7 | 0.005 - 0.06 | — | — |
-| DRS2 | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 3 | 0.01 - 0.06 | — | 1 - 3 |
-| DRS3 | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 5 | 0.01 - 0.06 | 1.5 | — |
-| WNDX | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.1 - 1 | — | — | 1 - 2 |
+| ESD | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 7 | 0.005 - 0.06 | — | — |
+| PSD | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 3 | 0.01 - 0.06 | — | 1 - 3 |
+| CESD | 30 - 60 | 0 - 0.1 | 2 - 5 | 1 - 5 | 0.01 - 0.06 | 1.5 | — |
+| LASD | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.1 - 1 | — | — | 1 - 2 |
 | LRSC | 30 - 60 | 0 - 0.1 | 2 - 5 | 0.5 - 1.1 | 0 - 21 | 0 - 1 | — |
 
 
 Continental glacial deposits in humid temperate setting
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | — | — | 
-| DRS2 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | — | 1 - 2 |
-| DRS3 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | 1 - 2 | — |
-| WNDX | 40 - 60 | 0.2 - 0.5 | — | — | 2 |
+| ESD | 40 - 60 | 1 - 3 | 0.01 - 0.03 | — | — | 
+| PSD | 40 - 60 | 1 - 3 | 0.01 - 0.03 | — | 1 - 2 |
+| CESD | 40 - 60 | 1 - 3 | 0.01 - 0.03 | 1 - 2 | — |
+| LASD | 40 - 60 | 0.2 - 0.5 | — | — | 2 |
 
 Granitoid and gneiss in semi-arid subalpine setting
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 35 - 55 | 1 - 3 | 0.04 - 0.06 | — | — | 
-| DRS2 | 35 - 55 | 1 - 3 | 0.05 - 0.07 | — | 3 |
-| DRS3 | 35 - 55 | 1 - 3 | 0.04 - 0.06 | 1 | — |
-| WNDX | 35 - 55 | 0.1 - 0.3 | — | — | 1 |
+| ESD | 35 - 55 | 1 - 3 | 0.04 - 0.06 | — | — | 
+| PSD | 35 - 55 | 1 - 3 | 0.05 - 0.07 | — | 3 |
+| CESD | 35 - 55 | 1 - 3 | 0.04 - 0.06 | 1 | — |
+| LASD | 35 - 55 | 0.1 - 0.3 | — | — | 1 |
 
 Clastic sedimentary in humid temperate setting
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 40 - 60 | 6 - 7 | 0.04 - 0.05 | — | — | 
-| DRS2 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | — | 3 |
-| DRS3 | 40 - 60 | 1 - 3 | 0.01 - 0.03 | 1 - 2 | — |
-| WNDX | 40 - 60 | 0.2 - 1 | — | — | 1 |
+| ESD | 40 - 60 | 6 - 7 | 0.04 - 0.05 | — | — | 
+| PSD | 40 - 60 | 1 - 3 | 0.01 - 0.03 | — | 3 |
+| CESD | 40 - 60 | 1 - 3 | 0.01 - 0.03 | 1 - 2 | — |
+| LASD | 40 - 60 | 0.2 - 1 | — | — | 1 |
 
 Submarine basalt and volcaniclastic in humid tropical setting, Tello (2020)
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 50 - 60 | 1 - 3 | 0.005 - 0.01 | — | — | 
-| DRS2 | 50 - 60 | 2 - 3 | 0.02 - 0.04 | — | 3 |
-| DRS3 | 50 - 60 | 1 - 3 | 0.01 | 1 - 4 | — |
-| WNDX | 50 - 60 | 0.35 - 0.45 | — | — | 1 |
+| ESD | 50 - 60 | 1 - 3 | 0.005 - 0.01 | — | — | 
+| PSD | 50 - 60 | 2 - 3 | 0.02 - 0.04 | — | 3 |
+| CESD | 50 - 60 | 1 - 3 | 0.01 | 1 - 4 | — |
+| LASD | 50 - 60 | 0.35 - 0.45 | — | — | 1 |
 
 Granitoid in humid tropical setting, Tello (2020) 
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 50 - 60 | 1 - 3 | 0.02 - 0.04 | — | — | 
-| DRS2 | 50 - 60 | 1 - 3 | 0.01 - 0.03 | — | 3 |
-| WNDX | 50 - 60 | 0.1 - 0.3 | — | — | 1 |
+| ESD | 50 - 60 | 1 - 3 | 0.02 - 0.04 | — | — | 
+| PSD | 50 - 60 | 1 - 3 | 0.01 - 0.03 | — | 3 |
+| LASD | 50 - 60 | 0.1 - 0.3 | — | — | 1 |
 
 Sandstone in humid temperate setting, DeRose and others (1991), DeRose (1996) and Baum and others (2011)
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| DRS1 | 30 - 60 | 50.0 | 0.124 | — | — | 
-| DRS2 | 30 - 60 | 1.57 - 1.68 | 0.019 - 0.022 | — | 3 |
-| DRS3 | 30 - 60 | 5.0 | 0.04 | 1.5 | — |
+| ESD | 30 - 60 | 50.0 | 0.124 | — | — | 
+| PSD | 30 - 60 | 1.57 - 1.68 | 0.019 - 0.022 | — | 3 |
+| CESD | 30 - 60 | 5.0 | 0.04 | 1.5 | — |
 
 Clastic sedimentary in a marine tropical to humid temperate setting, Ho and others (2012)
 | `trans_model` | `theta_c` (degrees) | `C0` | `C1` | `C2` | `power` |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| WNDX | 30 - 60 | 0.1- 0.3 | — | — | 1 |
+| LASD | 30 - 60 | 0.1- 0.3 | — | — | 1 |
  
   
 Suggested input parameter values for process-based models
@@ -327,7 +333,7 @@ REGOLITH has an option to read in a property zone grid for the area covered by t
 
 Optional smoothing
 ------------------
-A simple low-pass filter routine has been added to smooth topographic data before computing soil depth and (or) to smooth computed soil depth output from any of the models.  Pelletier and Rasmussen (2009) stated that smoothing topographic data was necessary for their NASD and NSD models.  Filtering soil depth produced by the WNDX model can mitigate large changes in soil depth near channel junctions where the upslope contributing area (flow accumulation) increases abruptly.  Using a flow-accumulation grid based on flow-directions computed using the D-infinity algorithm can also mitigate large depth changes at channel junctions as well as reducing the noise in soil depth computed using the NASD and NSDA models (Han and others, 2018).
+A simple low-pass filter routine has been added to smooth topographic data before computing soil depth and (or) to smooth computed soil depth output from any of the models.  Pelletier and Rasmussen (2009) stated that smoothing topographic data was necessary for their NASD and NSD models.  Filtering soil depth produced by the LASD model can mitigate large changes in soil depth near channel junctions where the upslope contributing area (flow accumulation) increases abruptly.  Using a flow-accumulation grid based on flow-directions computed using the D-infinity algorithm can also mitigate large depth changes at channel junctions as well as reducing the noise in soil depth computed using the NASD and NSDA models (Han and others, 2018).
 
 The filter algorithm computes the mean value of an N X N (where N is any odd, positive integer) square of grid cells and replaces the original value at the center cell with the mean. The filter computes a running average across the grid applied successively in east-west and north south directions, respectively.  Along edges, at corners, and irregular boundaries the algorithm uses a subset of the N x N square. Near irregular boundaries, no-data values are excluded from computation of the mean by reflecting interior values across the boundary.  The filter is applied four times to approximate the gaussian filter (Smith, 1997, see www.dspguide.com/ch24/3.htm).
 
@@ -376,6 +382,6 @@ Pelletier, J.D., Broxton, P.D., Hazenberg, P., Zeng, X., Troch,  P. A., Niu, G.-
 
 Smith, S.W., 1997, The Scientist and Engineer's Guide to Digital Signal Processing: www.DSPguide.com
 
-Tello, M., 2020, Optimization of landslide susceptibility modeling: a Puerto Rico case study, 2020 - Mines Theses and Dissertations.
+Tello, M., 2020, Optimization of landslide susceptibility modeling: a Puerto Rico case study: Master of Science Thesis, Colorado School of Mines, Golden. https://hdl.handle.net/11124/174137 (accessed July 2, 2021)
 
 

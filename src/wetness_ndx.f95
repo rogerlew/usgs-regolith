@@ -67,9 +67,9 @@ subroutine wetness_ndx(ulog,imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,contr
   endif
   soil_depth_min=minval(soil_depth)
   soil_depth_max=maxval(soil_depth)
-  write(*,*) 'Computed depth using modified wetness index'
+  write(*,*) 'Computed depth using modified wetness index (LASD model)'
   write(*,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
-  write(ulog,*) 'Computed depth using modified wetness index'
+  write(ulog,*) 'Computed depth using modified wetness index (LASD model)'
   write(ulog,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
   write(ulog,*) 'Exponent of upslope contributing area',power 
   write(ulog,*) 'Channel grid cells where depth changed, grid-cell threshold: ', chan_ctr, chan_thresh

@@ -22,7 +22,7 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
   chan_ctr=0
 !!  write(*,*) 'i, temp0 '
   select case(trans_model)
-  case('DRS2')
+  case('PSD') ! or 'DRS2'
     write(*,*) trans_model
     write (*,*) 'Degree of slope polynomial = ', power
     write (ulog,*) 'Degree of slope polynomial = ', power 
@@ -47,11 +47,10 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
          end if
       end if
     end do
-  case('DRS3')
+  case('CESD') !same as DRS3
     write(*,*) trans_model
     do i=1,imax
       if(slope_rad(i) >= depth_min(zo(i))*dg2rad ) then ! slope angle was computed to radians in main program
-!!        temp0=(depth_max(zo(i))-C0(zo(i))*sign(1.,plan_view_curv(i)))*exp(-C1(zo(i))*slope(i)) ! Need to compute or import plan_view_curv array.
         temp0=(C0(zo(i))-C2(zo(i))*sign(1.,plan_view_curv(i)))*exp(-C1(zo(i))*slope(i)) ! Need to compute or import plan_view_curv array.
       else
         temp0=0.
@@ -72,7 +71,7 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
          end if
       end if
     end do
-  case default !('DRS1')
+  case default !('ESD' or 'DRS1')
     write(*,*) trans_model
     do i=1,imax
       if(slope_rad(i) >= depth_min(zo(i))*dg2rad) then ! slope angle was computed to radians in main program
@@ -101,9 +100,9 @@ subroutine derose(ulog,imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
   end select 
   soil_depth_min=minval(soil_depth)
   soil_depth_max=maxval(soil_depth)
-  write(*,*) 'Computed depth using modified DeRose formula'
+  write(*,*) 'Computed depth using modified DeRose formula, ', trans_model
   write(*,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
-  write(ulog,*) 'Computed depth using modified DeRose formula'
+  write(ulog,*) 'Computed depth using modified DeRose formula, ', trans_model
   write(ulog,*) 'Range soil_depth: ', soil_depth_min,' - ', soil_depth_max
   write(ulog,*) 'Channel grid cells where depth changed, grid-cell threshold: ', chan_ctr, chan_thresh
   return 

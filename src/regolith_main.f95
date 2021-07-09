@@ -52,7 +52,7 @@
 ! indexed_cell_number(:) -- cell number, indexed from highest to lowest
 ! n_points -- an odd integer, greater than 1, that determines the width of the running average used in the smoothing algorithm, gauss_approx
 ! pf1(:) -- grid stored as 1-d array, used to track locations of no-data values
-! power -- exponent of DRS2 polynomial, or upslope area in NASD, NSDA, and WNDX models
+! power -- exponent of PSD (DRS2) polynomial, or upslope area in NASD, NSDA, and LASD (WNDX) models
 ! soil_depth -- computed depth of soil, h
 ! sec_theta -- 1/cos(slope angle) = sqrt(1+ |Del(z)|^2)
 ! temp -- temporary array to hold one row (line) of grid data (floating point)
@@ -118,7 +118,7 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='1.0.RC'; bldate='23 Jun 2021'
+  vrsn='1.0.RC'; bldate='09 Jul 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -153,7 +153,7 @@ program regolith
     allocate(filtered(imax))
     filtered=0.
   endif
-  if(trans_model(1:3)=='DRS')then
+  if(trans_model=='DRS3' .or. trans_model=='CESD')then
     allocate(plan_view_curv(imax))
     plan_view_curv=0.
   end if
@@ -319,7 +319,7 @@ program regolith
     write(*,*) 'chan_thresh, celsiz: ', chan_thresh, celsiz
     chan_thresh=chan_thresh/(celsiz*celsiz) ! normalize by grid cell area.
 ! Test for models that require upslope contributing area 
-  elseif (trans_model == 'WNDX' .or. trans_model == 'NASD' .or. trans_model &
+  elseif (trans_model == 'LASD' .or. trans_model == 'NASD' .or. trans_model &
           &== 'NSDA') then 
     write(u(1),*) 'Flow accumulation grid ', trim(flo_accfil), ' was not found'
     write(u(1),*) 'Edit path name in ', trim(init), ', then restart program.'
@@ -373,7 +373,7 @@ program regolith
     end if
   end if
 ! read plan-view curvature grid 
-  if(trans_model=='DRS3')then
+  if(trans_model=='DRS3' .or. trans_model=='CESD')then
     inquire(file=pv_curvfil,exist=lpvc)
     write(*,*) 'Status of pv_curvfil:', lpvc, trim(pv_curvfil)
     if(lpvc) then
@@ -485,16 +485,16 @@ program regolith
 ! compute soil_depth according to different soil-depth models
   write(*,*) 'Selecting depth model'
   select case(trans_model)
-    case('DRS1'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
+    case('ESD'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
       & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,depth_max,&
       & depth_min,C0,C1,C2,zo,max_zones,power) ! DeRose exponential formula 
-    case('DRS2'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
+    case('PSD'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
       & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,depth_max,&
       & depth_min,C0,C1,C2,zo,max_zones,power) ! DeRose polynomial formula 
-    case('DRS3'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
+    case('CESD'); call derose(u(1),imax,chan_thresh,chan_depth,theta_c_rad,slope,slope_rad,&
       & dg2rad,contrib_area,plan_view_curv,soil_depth,trans_model,depth_max,&
       & depth_min,C0,C1,C2,zo,max_zones,power) ! DeRose exponential formula with curvature 
-    case('WNDX'); call wetness_ndx(u(1),imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,&
+    case('LASD'); call wetness_ndx(u(1),imax,chan_thresh,chan_depth,theta_c_rad,dg2rad,&
       & contrib_area,slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power) ! Modified wetness index 
     case('LRSC') ! Linear regression slope- and curvature-based formula
       if (l_deriv .or. l_mode) then
@@ -599,7 +599,7 @@ program regolith
   end do
   if(hump_prod_any) scratch=trim(scratch)//'hmp_'
   if(soilSmooth) scratch=trim(scratch)//'smo_'
-  if(trans_model(1:1)=='N' .or. trans_model(1:1)=='L') then
+  if(trans_model(1:1)=='N' .or. trans_model(1:2)=='LC') then
     if(l_mode) then
       scratch=trim(scratch)//'anl_' ! Original mode based on analytic formula
     else
