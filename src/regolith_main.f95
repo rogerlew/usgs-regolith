@@ -1,5 +1,5 @@
 ! program to compute soil depth using various topographically based models
-! by Rex L. Baum, U.S. Geological Survey, January 2015 - June 2021
+! by Rex L. Baum, U.S. Geological Survey, January 2015 - Aug 2021
 ! VARIABLE DEFINITIONS
 ! celsiz -- grid cell spacing/width
 ! chan_thresh -- threshold value of upslope contributing area for channels
@@ -118,7 +118,7 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='1.0.RC'; bldate='09 Jul 2021'
+  vrsn='1.0.0'; bldate='05 Aug 2021'
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)

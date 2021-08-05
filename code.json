@@ -3,8 +3,8 @@
     "name": "landslides-soil_depth",
     "organization": "U.S. Geological Survey",
     "description": "A Fortran 95 program for estimating soil mantle thickness in a digital landscape for landslide and debris-flow hazard assessment",
-    "version": "Release candidate for 1.0.0",
-    "status": "Development",
+    "version": "1.0.0",
+    "status": "Approved",
 
     "permissions": {
       "usageType": "openSource",
@@ -43,7 +43,7 @@
     },
 
     "date": {
-      "metadataLastUpdated": "2020-10-06"
+      "metadataLastUpdated": "2021-08-05"
     }
   }
 ]
