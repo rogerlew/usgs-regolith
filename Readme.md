@@ -7,6 +7,10 @@ Citation
 ---------
 Baum, R.L., Bedinger, E.C., and Tello, M.J., 2021, REGOLITH--A Fortran 95 program for estimating soil mantle thickness in a digital landscape for landslide and debris-flow hazard assessment:  U.S. Geological Survey Software Release, https://doi.org/10.5066/P9U2RDWJ
 
+USGS Information Product Number
+-------
+Version 1.0.0, IP-123626
+
 Description
 -----------
 The computer program REGOLITH is a Fortran program designed for estimating soil thickness over a digital landscape.  The program implements various published empirical and process-based models for soil thickness.  This command-line program is used in conjunction with Python scripts to prepare input files and automate certain steps.
