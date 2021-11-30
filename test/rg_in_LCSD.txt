@@ -9,8 +9,8 @@ LCSD, .true.
 # Number of steps for NDSD model, num_steps
 1000
 zone, 1
-# theta_c, depth_min, depth_max, C0, C1, C2 for empirical models or theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod for process-based models
-50.,        0.,        100.0,    0.5,  1.0,    .false.
+# theta_c, depth_min, depth_max, C0, C1, C2 for empirical models or theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, C0, C1 for process-based models
+50.,        0.,        100.0,    0.5,  1.0,    .false., 0.,  0.0
 # Exponent of DRS2 polynomial, or of upslope area in NASD, NSDA, and WNDX models
 1.0
 # File name of digital elevation grid (elevfil)

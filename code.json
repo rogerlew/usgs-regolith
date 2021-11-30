@@ -3,23 +3,23 @@
     "name": "landslides-soil_depth",
     "organization": "U.S. Geological Survey",
     "description": "A Fortran 95 program for estimating soil mantle thickness in a digital landscape for landslide and debris-flow hazard assessment",
-    "version": "1.0.0",
-    "status": "Approved",
+    "version": "1.0.3",
+    "status": "Development",
 
     "permissions": {
       "usageType": "openSource",
       "licenses": [
         {
           "name": "Public Domain, CC0-1.0",
-          "URL": "https://code.usgs.gov/ghsc/lhp/soil_depth/LICENSE.md"
+          "URL": "https://code.usgs.gov/ghsc/lhp/soil_depth/-/raw/master/LICENSE.md"
         }
       ]
     },
 
     "homepageURL": "https://code.usgs.gov/ghsc/lhp/soil_depth",
     "downloadURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/-/archive/master/soil_depth-master.zip",
-    "disclaimerURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/DISCLAIMER.md",
-    "repositoryUrl": "git@code.usgs.gov:ghsc/lhp/soil_depth.git",
+    "disclaimerURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/-/raw/master/DISCLAIMER.md",
+    "repositoryUrl": "https://code.usgs.gov/ghsc/lhp/soil_depth.git",
     "vcs": "git",
 
     "laborHours": null,
@@ -27,7 +27,7 @@
     "tags": [
       "Natural Hazards",
       "Geologic Hazards Science Center",
-      "Soil thickness estimates"
+      "Soil thickness estimates",
       "Landslides"
     ],
 

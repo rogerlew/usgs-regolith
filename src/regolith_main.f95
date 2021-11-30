@@ -80,7 +80,7 @@ program regolith
   real, allocatable:: h0(:),sc(:),dif_ratio(:),depth_max(:),depth_min(:),C0(:),C1(:),C2(:)
   real, allocatable:: theta_c_rad(:), theta_c_deg(:)
   real, allocatable:: elev(:),slope(:),soil_depth(:) 
-  real, allocatable:: plan_view_curv(:),tfg(:),temp(:),pf1(:)
+  real, allocatable:: plan_view_curv(:),temp(:),pf1(:) !,tfg(:)
   real, allocatable:: dzdxgs(:),dzdygs(:),d2zdx2gs(:),d2zdy2gs(:),del2gs(:) 
   real, allocatable:: mag_del_z(:), mag_del_z_sq(:),sec_theta(:),nl_slope_fac(:),slope_rad(:)
   real, allocatable:: slopgs(:),dipgs(:),contrib_area(:)
@@ -118,7 +118,7 @@ program regolith
 !!!  pid=(/'TI','GM','TR'/)
   pi=3.141592653589793
   dg2rad=pi/180.D0
-  vrsn='1.0.0'; bldate='05 Aug 2021'
+  vrsn='1.0.3'; bldate='04 Nov 2021' 
   mnd=6 ! Default value assumed if no integer grid is read.
   tb=char(9)
   call rgbanner(vrsn,bldate)
@@ -138,7 +138,7 @@ program regolith
 ! Allocate & initialize arrays 
   grd=row*col
   imx1=imax
-  allocate(pf1(grd),pf2(grd),tfg(imax),nxt(imax))
+  allocate(pf1(grd),pf2(grd),nxt(imax)) !,tfg(imax)
   allocate(dsctr(imax+1),slope(imax),slope_rad(imax))
   allocate(temp(col),itemp(col))
   allocate(soil_depth(imax),zo(imax),contrib_area(imax))
@@ -157,7 +157,7 @@ program regolith
     allocate(plan_view_curv(imax))
     plan_view_curv=0.
   end if
-  pf1=0.;pf2=0; tfg=0.  !
+  pf1=0.;pf2=0 !; tfg=0.
   nxt=0; dsctr=0; zo=1
   slope=0.; slope_rad=0. 
   temp=0.;itemp=0 
@@ -464,8 +464,10 @@ program regolith
     allocate(mag_del_z(imax), mag_del_z_sq(imax),sec_theta(imax),nl_slope_fac(imax))
     allocate(unused(imax))
     allocate(trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax))
+    allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
     mag_del_z=0.;mag_del_z_sq=0.;sec_theta=0.;nl_slope_fac=0.
     trans_x=0.;trans_y=0.;d_trans_x_dx=0.;d_trans_y_dy=0.;unused=0.
+    d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
 ! compute east-west and north-south slope gradients
     if(dzdxgs_max*dzdygs_max==0.)then
       write(*,*) 'Computing E-W & N-S elevation gradients'
@@ -481,6 +483,8 @@ program regolith
       sec_theta(i)=sqrt(1+mag_del_z_sq(i))
     end do    
     tis=tiny(x1)
+    call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
+      & celsiz,celsiz,no_data_64,no_data_int)
   end if
 ! compute soil_depth according to different soil-depth models
   write(*,*) 'Selecting depth model'
@@ -498,10 +502,10 @@ program regolith
       & contrib_area,slope_rad,soil_depth,depth_min,depth_max,C0,zo,max_zones,power) ! Modified wetness index 
     case('LRSC') ! Linear regression slope- and curvature-based formula
       if (l_deriv .or. l_mode) then
-        allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
-        d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
-        call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
-           & celsiz,celsiz,no_data_64,no_data_int)
+!!        allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
+!!        d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
+!!        call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
+!!           & celsiz,celsiz,no_data_64,no_data_int)
       end if
       if(l_mode) then ! Pass 2nd derivatives from laplacian subroutine.
         call lrsc_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,&
@@ -509,47 +513,49 @@ program regolith
         & contrib_area,soil_depth,C0,C1,C2,depth_max,depth_min,&
         & unused,del2gs,d2zdx2gs,d2zdy2gs,zo,max_zones,l_mode)
       else ! Compute 2nd derivatives from 1st derivatives for greater smoothing.
-        allocate(del2gs(imax)); del2gs=0.
+!!        allocate(del2gs(imax)); del2gs=0.
+        del2gs=0.
         call lrsc_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,&
         & chan_thresh,chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,mag_del_z,slope_rad,&
         & contrib_area,soil_depth,C0,C1,C2,depth_max,depth_min,&
         & unused,del2gs,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode)
       endif
     case('LCSD') ! Classic curvature-based formula
-      if (l_deriv .or. l_mode) then
-        allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
-        d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
-        call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
-           & celsiz,celsiz,no_data_64,no_data_int)
-      end if
+!!      if (l_deriv .or. l_mode) then
+!!        allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
+!!        d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
+!!        call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
+!!           & celsiz,celsiz,no_data_64,no_data_int)
+!!      end if
       if(l_mode) then ! Pass 2nd derivatives from laplacian subroutine.
         call lcsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
         & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,slope_rad,&
         & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-        & unused,trans_x,trans_y,d2zdx2gs,d2zdy2gs,zo,max_zones,l_mode)
+        & unused,trans_x,trans_y,d2zdx2gs,d2zdy2gs,zo,max_zones,l_mode,C0,C1,del2gs)
       else ! Compute 2nd derivatives from 1st derivatives for greater smoothing.
+        del2gs = 0.
         call lcsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
         & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,slope_rad,&
         & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-        & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode)
+        & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,C0,C1,del2gs)
       endif
     case('NSD');  call nsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
       & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode)
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,C0,C1,del2gs)
     case('NSDA'); call nsd_a_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
       & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power)
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power,C0,C1,del2gs)
     case('NASD'); call nasd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,cta,chan_thresh,&
       & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
       & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power)
+      & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power,C0,C1,del2gs)
     case('NDSD') 
-      allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
-      d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
-      call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
-         & celsiz,celsiz,no_data_64,no_data_int)
+!!      allocate(d2zdx2gs(imax),d2zdy2gs(imax),del2gs(imax))
+!!      d2zdx2gs=0.;d2zdy2gs=0.;del2gs=0.
+!!      call laplacian(elev,pf1,cta,imax,col,row,d2zdx2gs,d2zdy2gs,del2gs,&
+!!         & celsiz,celsiz,no_data_64,no_data_int)
       call ndsd_depth(u(1),imax,col,row,grd,celsiz,no_data_64,no_data_int,&
          & cell_row,cell_column,indexed_cell_number,elev_index_lkup,cta,pf1,dzdxgs,&
          & dzdygs,del2gs,nl_slope_fac,sec_theta,soil_depth,num_steps,chan_thresh,&
@@ -587,9 +593,9 @@ program regolith
 ! Save results    
   write(*,*) 'Saving results'
   ti=tiny(param(1)) 
-  do i=1,imx1
-    tfg(i)=soil_depth(i)
-  end do
+!!  do i=1,imx1
+!!    tfg(i)=soil_depth(i)
+!!  end do
 ! Save soil depth file  
   scratch='RG_'//trim(trans_model)//"_"
   scratch=adjustl(scratch)
@@ -607,7 +613,7 @@ program regolith
     endif
   end if
   outfil=trim(folder)//trim(scratch)//trim(suffix)//grxt
-  call ssvgrd(tfg,imax,pf1,row,col,u(9),no_data_32,param,u(1),&
+  call ssvgrd(soil_depth,imax,pf1,row,col,u(9),no_data_32,param,u(1),&
    & outfil,ti,header)
 ! Save series of files with derivatives or related quantities
   if(l_deriv) then
@@ -644,7 +650,7 @@ program regolith
        & outfil,ti,header)    
     endif
   ! save d2zdx2gs
-    if(trans_model(1:3)=='NDS' .or. trans_model == 'LCSD') then
+    if(trans_model(1:1)=='N' .or. trans_model(1:1) == 'L') then
       scratch = 'RG_d2zdx2gs_'
       scratch=adjustl(scratch)
       if(soilSmooth) scratch=trim(scratch)//'smo_'
@@ -653,7 +659,7 @@ program regolith
        & outfil,ti,header)
     endif
   ! save d2zdy2gs
-    if(trans_model(1:3)=='NDS' .or. trans_model == 'LCSD') then
+    if(trans_model(1:1)=='N' .or. trans_model(1:1) == 'L') then
       scratch = 'RG_d2zdy2gs_'
       scratch=adjustl(scratch)
       if(soilSmooth) scratch=trim(scratch)//'smo_'
@@ -662,7 +668,7 @@ program regolith
        & outfil,ti,header)    
     endif
   ! save laplacian   
-    if(trans_model(1:3)=='NDS' .or. trans_model == 'LCSD') then
+    if(trans_model(1:1)=='N' .or. trans_model(1:1) == 'L') then
       scratch='RG_del2gs_'
       scratch=adjustl(scratch)
       if(soilSmooth) scratch=trim(scratch)//'smo_'

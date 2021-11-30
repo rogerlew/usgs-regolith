@@ -1,15 +1,16 @@
   subroutine h_solve(a,b,c,h0,h1,h,l_mode)
 !  Solver for humped soil production model (see Peletier & Rasmussen, 2009)
-!  Code updated Apr. 2021, RLB
+!  Code updated Oct. 26 2021, RLB
   implicit none
 ! LOCAL VARIABLES
   integer:: i,mmax,itmax
   real (kind = 8):: hlb,hub,htb,hmax,htemp,fl,fu,ftemp   
   real (kind = 8):: x0,dx,eps 
+  real :: c_mod 
 ! FORMAL ARGUMENTS
-  real, intent(in):: a,b,h0,h1
+  real, intent(in):: a,b,h0,h1 ! a=sec_theta(i), b=dif_ratio(zo(i))
   real, intent(out):: h ! depth
-  real, intent(in):: c
+  real, intent(in):: c ! c=transport function
   logical :: l_mode
 !
   mmax=32 ! maximum iterations for bisection
@@ -20,38 +21,28 @@
   hub=0.0 ! upper bound value of depth, h
 ! Bracket the range in which the depth function changes sign.  
   if(l_mode) then ! Original mode
-    if((h0/hlb)*c/(b*a) >0.) then 
-      fl=hlb-h0*a*log((hlb/h0)*(b*a)/c) ! Objective function at hlb
+    if(c < 0.) then ! Apply formulas only to convex slopes
+      fl=hlb+(h0*c)/(b*a*exp(-hlb/(h0*a))) ! Objective function at hlb
     else
       fl=hlb
     end if
     fu=fl
     do i=1,20
-      hub=hub+1.5 !increase hub
+      hub=hub+1.5 !increase hub to widen bracket
       ftemp=fu;htemp=hub-1.5
-      if((h0/hub)*c/(b*a) <0.) then 
-        cycle
-      else
-        fu=hub-h0*a*log((hub/h0)*(b*a)/c) ! Objective function at hub
-      endif
+      fu=hub+(h0*c)/(b*a*exp(-hub/(h0*a))) ! Objective function at hub
     if(fl*fu<0.) exit ! The function changes sign between hlb and hub
     end do
   else ! Modified mode 
-    if((h0/hlb)*c/(b*a) >0.) then
-      fl=hlb-h0*a*log((h0/hlb)*c/(b*a)) ! Objective function at hlb
-    else
-      fl=hlb
-    end if
+    c_mod = c
+    if(c > 0.) c_mod = -c ! Apply same formula to convex and concave slopes
+    fl=hlb+(h0*c_mod*exp(-hlb/(h0*a)))/(b*a) ! Objective function at hlb
     fu=fl
     do i=1,20
       hub=hub+1.5 !increase hub
       ftemp=fu; htemp=hub-1.5
-      if((h0/hub)*c/(b*a) <0.) then
-        cycle 
-      else
-        fu=hub-h0*a*log((h0/hub)*c/(b*a)) ! Objective function at hub
-      endif
-    if(fl*fu<0.) exit ! The function changes sign between hlb and hub
+      fu=hub+(h0*c_mod*exp(-hlb/(h0*a)))/(b*a) ! Objective function at hub
+      if(fl*fu<0.) exit ! The function changes sign between hlb and hub
     end do
   endif
   if(hub>=hmax) then ! Estimated soil depth range exceeds physically reasonable bounds

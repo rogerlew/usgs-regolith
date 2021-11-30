@@ -10,6 +10,7 @@ Baum, R.L., Bedinger, E.C., and Tello, M.J., 2021, REGOLITH--A Fortran 95 progra
 USGS Information Product Number
 -------
 Version 1.0.0, IP-123626
+Latest revision 1.0.3, 04 Nov 2021
 
 Description
 -----------
@@ -124,11 +125,13 @@ Process-based model formula parameters and REGOLITH input parameter names (if ap
  \*\*The NSDA model is a hybrid of the NSD model (Pelletier and Rasmussen, 2009) and linear dependence on upslope contributing area.
  
  ### Notes about model formulas  
- The formulas for the soil-production and transport (process-based) models, LCSD, NSD, NSDA, NASD, and NDSD, listed above present the theoretical formulas (Pelletier and Rasmussen, 2009).  However REGOLITH implements modified forms of these formulas for the purpose of improving model results.  The LCSD, NSD, NSDA, and NASD models are capable of computing soil depth only where the ground surface is convex upward (Pelletier and Rasmussen, 2009; Patton and others, 2018), such as knobs and ridges, which limits their usefulness for computing soil depth in many potential landslide source areas.  Source areas for shallow landslides occur far more commonly on planar and concave slopes than on convex slope.  In addition, these models tend to produce noisy soil-depth estimates on high-resolution topography.  
+ The formulas for the soil-production and transport (process-based) models, LCSD, NSD, NSDA, NASD, and NDSD, listed above present the theoretical formulas (Pelletier and Rasmussen, 2009).  For all except the NDSD model, REGOLITH implements modified forms of these formulas for the purpose of improving model results.  The LCSD, NSD, NSDA, and NASD models are capable of computing soil depth only where the ground surface is convex upward (Pelletier and Rasmussen, 2009; Patton and others, 2018), such as knobs and ridges, which limits their usefulness for computing soil depth in many potential landslide source areas.  Source areas for shallow landslides occur far more commonly on planar and concave slopes than on convex slope.  In addition, these models tend to produce noisy soil-depth estimates on high-resolution topography.  
  
- Some simple changes were made to address the need for estimating soil depth on planar and concave slopes.  In "original" or "test" mode, we have deleted the negative sign in the argument of the log function so that the model estimates depth where the ground surface is concave upward.   In "modified" mode the formulas for the LCSD and NSD have been adjusted to compute soil depth where the ground surface is either concave or convex, by using the absolute value of the argument of the log function.  For the NSDA and NASD models in modified mode, we have inverted the argument of the log function and taken its absolute value (before computing the logarithm) to esitmate soil depth where the ground surface is either concave or convex and create an effect of soil accumulating in concave areas.  Consequently, the valid range of values for the diffusivity ratio for these two models differs greatly from the expected range for the unmodified versions of the models.  We recognise that the modifications of the process-based model formulas implemented in REGOLITH violate some of the original assumptions of the sediment transport theories upon which the models are based. However, the purpose of the modifications is to find practical solutions for estimating soil depth on landslide prone hillsides for hazard assessment, rather than modeling landscape evolution.  
+ Some simple changes were made to address the need for estimating soil depth on planar and concave slopes in the LCSD, NSD, NSDA, and NASD models.  In *original* or *analytical* mode, the model estimates depth where the ground surface is convex using the original formula and the Patton and others (2018) curvature-dependent model is used where the ground is concave upward as suggested by Yan and others (2021).  This feature can be turned off by setting both C0 and C1 to zero, so that the original mode can compute depths only on the convex surfaces.  In *modified* mode we have adjusted formulas for the LCSD, NSD, NSDA, and NASD models by inverting the argument of the log function and taking its absolute value (before computing the logarithm) to esitmate soil depth where the ground surface is either concave or convex and create an effect of soil accumulating in concave areas.  Consequently, the valid range of values for the diffusivity ratio for these models in te *modified* mode differs greatly from the expected range for the unmodified versions of the models.  We recognise that the modifications of the process-based model formulas implemented in REGOLITH violate some of the original assumptions of the sediment transport theories upon which the models are based. However, the purpose of the modifications is to find practical solutions for estimating soil depth on landslide prone hillsides for hazard assessment, rather than modeling landscape evolution.  
  
  Due to its depth dependence, the NDSD model cannot be solved directy for *d*<sub>*r*</sub>.  Consequently, it is solved numerically in the manner suggested by Pelletier and Rasmussen (2009).  By specifying the number of steps per unit of depth, the user controls the resolution of the estimated soil depths.  For example, setting the value of `num_steps` to 100 will provide 1-cm resolution on the depth estimate if the depth unit is meters.  The larger the value of  `num_steps`  the slower the computations will proceed. 
+ 
+ When using a humped soil production function with the LCSD, NSD, NSDA and NASD models the soil depth is computed numerically by means of brackeing and bisection (Press and others, 1986).
 
 Model code,    Required input parameters
 -----------------------------------------------
@@ -137,11 +140,13 @@ Model code,    Required input parameters
 - CESD:         `theta_c, depth_min, depth_max, C0, C1, C2, chan_thresh, chan_depth`
 - LASD:         `theta_c, depth_min, depth_max, C0, power, chan_thresh, chan_depth`
 - LRSC:         `theta_c, depth_min, depth_max, C0, C1, C2, chan_thresh, chan_depth`
-- LCSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, l_mode`
-- NSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, l_mode`
-- NSDA:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, power, l_mode`
-- NASD:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, power, l_mode`
-- NDSD:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, chan_thresh, chan_depth, num_steps`
+- LCSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, C0, C1, chan_thresh, chan_depth, l_mode`
+- NSD:          `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, C0, C1, chan_thresh, chan_depth, l_mode`
+- NSDA:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, C0, C1, chan_thresh, chan_depth, power, l_mode`
+- NASD:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, C0, C1, chan_thresh, chan_depth, power, l_mode`
+- NDSD:         `theta_c, depth_min, depth_max, h0, dif_ratio, hump_prod, C0, C1, chan_thresh, chan_depth, num_steps`
+*Note:*
+For the NDSD model, `C0` and `C1` are placeholders only and not used by the model.
 
 Model code,    Required input files
 ------------------------------------------
@@ -254,7 +259,7 @@ Clastic sedimentary in a marine tropical to humid temperate setting, Ho and othe
   
 Suggested input parameter values for process-based models
 -----------------------------------------------
-The following table displays the full ranges of parameters used in running the program successfully with the process-based models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were derived from model runs conducted on sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020). `l_mode` is available for verifying code output against analytical solutions. The original mode ranges were obtained from Pelletier & Rasmussen (2009) from tests on soils in Pima County, Arizona.
+The following table displays the full ranges of parameters used in running the program successfully with the process-based models based on results yielded from a variety of study areas with varying geological and climate conditions.  The subsequent tables display site-specific parameter ranges from within these study areas.  The ranges at continental glacial deposits in humid temperate settings, granitoid and gneiss in semi-arid and subalpine settings, and clastic sedimentary geology in humid temperate settings were derived from model runs conducted on sites in Mukilteo, WA, Raymond, CO, and North Charlotte Creek, OR, respectively.  The parameters from submarine basalt and volcaniclastic in humid tropical settings and granitoid in humid tropical settings were gathered from sites in Anasco, Lares, and Naranjito, Puerto Rico, and Utado, Puerto Rico, respectively, as provided in Tello (2020). `l_mode` is available for verifying code output against analytical solutions. The original mode ranges were obtained from Pelletier & Rasmussen (2009) from tests on soils in Pima County, Arizona.  See suggested parameter ranges for the LRSC model above for suggested values of `C0` and `C1` to implement the Patton and others (2018) model feature for concave surfaces with the LCSD, NSD, NASD, and NSDA models.
 
 | `trans_model` | `theta_c` (degrees) | `depth_min` (m) | `depth_max` (m) | `h0` (m) | `dif_ratio` | `power` |
 | ----- | ------ | ------ | ------ | ------ | ------ | ------- |
@@ -356,7 +361,7 @@ A Jupyter Notebook script *Regolith_Iterations.ipynb* is provided in the main di
 
 Test
 -----
-The *test* directory in the main directory of this repository contains a python notebook to run the program REGOLITH on input files representing synthetic terrain. The synthetic terrain is modeled on orthogonal sine waves to represent topography having concave and convex features.  The DEM is found in the directory *test/input*.  The Python notebook checks numerically computed output of the LCSD and NSD models (soil depth as well as intermediate values, such as the aspect direction, slope angle, Laplacian, and non-linear transport function) against analytically computed output for the same models to confirm that the program is working correctly.  See Readme file in the *test* directory for more details.
+The *test* directory in the main directory of this repository contains a python notebook, *test_regolith.ipynb*, to run the program REGOLITH on input files representing synthetic terrain. The synthetic terrain is modeled on orthogonal sine waves to represent topography having concave and convex features.  The DEM is found in the directory *test/input*.  The Python notebook checks numerically computed output of the LCSD and NSD models (soil depth as well as intermediate values, such as the aspect direction, slope angle, Laplacian, and non-linear transport function) against analytically computed output for the same models to confirm that the program is working correctly.  See Readme file in the *test* directory for more details.
 
 Disclaimer
 ------------
@@ -384,8 +389,10 @@ Pelletier, J.D., and Rasmussen, C., 2009, Geomorphically based predictive mappin
 
 Pelletier, J.D., Broxton, P.D., Hazenberg, P., Zeng, X., Troch,  P. A., Niu, G.-Y., Williams, Z., Brunke, M. A., and Gochis,  D., 2016, A gridded global data set of soil, immobile regolith, and sedimentary deposit thicknesses for regional and global land surface modeling, J. Adv. Model. Earth Syst., 8, 41–65, doi:10.1002/2015MS000526.
 
+Press, W.H., Flannery, B.P., Teukolsky, S.A., and Vetterling, W.T., 1986, Numerical Recipes--The Art of Scientific Computing: New York, Cambridge University Press, 818 p.
+
 Smith, S.W., 1997, The Scientist and Engineer's Guide to Digital Signal Processing: www.DSPguide.com
 
 Tello, M., 2020, Optimization of landslide susceptibility modeling: a Puerto Rico case study: Master of Science Thesis, Colorado School of Mines, Golden. https://hdl.handle.net/11124/174137 (accessed July 2, 2021)
 
-
+Yan, Q., Wainwright, H., Dafflon, B., Uhlemann, S., Steefel, C.I., Falco, N., Kwang, J. and Hubbard, S.S., 2021, Hybrid data-model-based mapping of soil thickness in a mountainous watershed, Earth Surf. Dynam. Discuss., 1–23, doi:10.5194/esurf-2020-110. 

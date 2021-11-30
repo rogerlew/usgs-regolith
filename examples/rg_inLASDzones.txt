@@ -1,7 +1,7 @@
 #Program regolith, v.1.0, to estimate regolith thickness from topography
 North Charlotte Creek
-# Transport model (trans_model) use codes, 'ESD', 'PSD', 'CESD', 'LASD', 'LRSC', 'NSD', 'NASD', 'NSDA', 'LCSD', or 'NDSD'; Test mode?
-WNDX, .false.
+# Transport model (trans_model) use codes, 'ESD', 'PSD', 'CESD', 'LASD', 'LRSC', 'NSD', 'NASD', 'NSDA', 'LCSD', or 'NDSD'; Original mode?
+LASD, .false.
 # Channel parameters: chan_thresh, chan_depth
 2000000., 0.5
 # Number of soil depth zones, num_zones, max_zones
@@ -31,7 +31,7 @@ zone, 2
 # Folder where output grid files will be stored  (folder)
 ./output/
 # Identification code to be added to names of output files (suffix)
-DRS3
+2_zone
 # Specify grid file extension? (.asc if true, default is .txt), Output derivatives? 
 .true.,.false.
 # Specify Topographic smoothing and soil smoothing (topoSmooth, soilSmooth), Smoothing window (n_points)

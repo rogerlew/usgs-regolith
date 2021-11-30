@@ -1,21 +1,21 @@
 ! procedure to compute soil depth based on NSD-A transport model
-! 3 Feb 2015, RLB, Latest revision April 2021, RLB.
+! 3 Feb 2015, RLB, Latest revision 13 Oct 2021, RLB.
 subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_thresh,&
   & chan_depth,theta_c_rad,pf1,dzdxgs,dzdygs,sec_theta,nl_slope_fac,slope_rad,&
   & contrib_area,soil_depth,hump_prod,h0,dif_ratio,depth_max,depth_min,tis,&
-  & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power)
+  & unused,trans_x,trans_y,d_trans_x_dx,d_trans_y_dy,zo,max_zones,l_mode,power,C0,C1,del2gs)
   implicit none
 ! LOCAL VARIABLES
   integer::i, chan_ctr
   real ::trans_nsd,aexpn,soil_depth_min,soil_depth_max,h1 
 ! FORMAL ARGUMENTS
   integer, intent(in)::ulog,imax,ncol,nrow,grd,no_data_int,cta(ncol,nrow),max_zones,zo(imax)
-  real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis,power
+  real, intent(in):: h0(max_zones),dif_ratio(max_zones),tis,power,C0(max_zones),C1(max_zones)
   real, intent(in):: depth_max(max_zones),depth_min(max_zones),theta_c_rad(max_zones)
   real, intent(in)::chan_thresh,chan_depth,pf1(grd),contrib_area(imax)
   real, intent(in):: dzdxgs(imax),dzdygs(imax),sec_theta(imax),nl_slope_fac(imax),slope_rad(imax)
   real, intent(inout)::soil_depth(imax)
-  real, intent(inout):: unused(imax)
+  real, intent(inout):: unused(imax), del2gs(imax)
   real, intent(inout):: trans_x(imax),trans_y(imax),d_trans_x_dx(imax),d_trans_y_dy(imax)
   real (kind = 8),intent(in):: nodat,celsiz !
   logical, intent(in):: hump_prod(max_zones), l_mode
@@ -35,13 +35,20 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
       aexpn=contrib_area(i)
       if(power /= 1. .and. aexpn /= 0.) aexpn=aexpn**power
       if(ncol == 1 .or. nrow == 1) aexpn=sqrt(aexpn)
-      if (abs(trans_nsd*aexpn) <=tis) cycle ! avoid division by zero
-      if (trans_nsd*aexpn*dif_ratio(zo(i)) < 0.) cycle ! avoid negative argument for log() 
+!  Apply Patton et al. 2020 curvature formula where values of the process-based formula for soil depth are undefined.
+!  Test to avoid negative argument of log() and division by zero and very small numbers
+      if (dif_ratio(zo(i))*(trans_nsd*aexpn) > 0. .or. abs(trans_nsd*aexpn) <= 0.0001) then
+        soil_depth(i)= C0(zo(i)) + C1(zo(i)) * del2gs(i) 
+        if(soil_depth(i) < depth_min(zo(i))) soil_depth(i) = depth_min(zo(i))
+        if(soil_depth(i) > depth_max(zo(i))) soil_depth(i) = depth_max(zo(i))
+        cycle
+      endif
+!  Compute soil depth for NSD-A model      
       if (hump_prod(zo(i))) then ! use humped soil production funtion
-        h1=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) 
+        h1=h0(zo(i))*sec_theta(i)*log((-dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) 
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_mode)
       else ! used exponential soil-production function
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) 
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((-dif_ratio(zo(i))*sec_theta(i))/(trans_nsd*aexpn)) 
       end if
       if(soil_depth(i)<depth_min(zo(i))) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
@@ -55,11 +62,12 @@ subroutine nsd_a_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan
       aexpn=contrib_area(i)
       if(power /= 1.) aexpn=aexpn**power
       if (abs(trans_nsd*aexpn) <= 0.0001) cycle ! Avoid division by zero and very small numbers
+!  Compute soil depth for modified NSDA model      
       if (hump_prod(zo(i))) then
-        h1=h0(zo(i))*sec_theta(i)*log(trans_nsd*aexpn/(dif_ratio(zo(i))*sec_theta(i)))
+        h1=h0(zo(i))*sec_theta(i)*log((trans_nsd*aexpn)/(dif_ratio(zo(i))*sec_theta(i)))
         call h_solve(sec_theta(i),dif_ratio(zo(i)),trans_nsd*aexpn,h0(zo(i)),h1,soil_depth(i),l_mode)
       else
-        soil_depth(i)=h0(zo(i))*sec_theta(i)*log(trans_nsd*aexpn/(dif_ratio(zo(i))*sec_theta(i))) 
+        soil_depth(i)=h0(zo(i))*sec_theta(i)*log((trans_nsd*aexpn)/(dif_ratio(zo(i))*sec_theta(i))) 
       end if
       if(soil_depth(i)<0.) soil_depth(i)=depth_min(zo(i))
       if(soil_depth(i)>depth_max(zo(i))) soil_depth(i)=depth_max(zo(i))
