@@ -19,7 +19,7 @@
     "homepageURL": "https://code.usgs.gov/ghsc/lhp/soil_depth",
     "downloadURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/-/archive/master/soil_depth-master.zip",
     "disclaimerURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/-/raw/master/DISCLAIMER.md",
-    "repositoryUrL": "https://code.usgs.gov/ghsc/lhp/soil_depth.git",
+    "repositoryURL": "https://code.usgs.gov/ghsc/lhp/soil_depth.git",
     "vcs": "git",
 
     "laborHours": 1000,
@@ -43,7 +43,7 @@
     },
 
     "date": {
-      "metadataLastUpdated": "2021-08-05"
+      "metadataLastUpdated": "2021-12-03"
     }
   }
 ]
