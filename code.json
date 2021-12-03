@@ -19,10 +19,10 @@
     "homepageURL": "https://code.usgs.gov/ghsc/lhp/soil_depth",
     "downloadURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/-/archive/master/soil_depth-master.zip",
     "disclaimerURL": "https://code.usgs.gov/ghsc/lhp/soil_depth/-/raw/master/DISCLAIMER.md",
-    "repositoryUrl": "https://code.usgs.gov/ghsc/lhp/soil_depth.git",
+    "repositoryUrL": "https://code.usgs.gov/ghsc/lhp/soil_depth.git",
     "vcs": "git",
 
-    "laborHours": null,
+    "laborHours": 1000,
 
     "tags": [
       "Natural Hazards",
