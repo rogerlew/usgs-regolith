@@ -46,7 +46,8 @@ subroutine nasd_depth(ulog,imax,ncol,nrow,grd,celsiz,nodat,no_data_int,cta,chan_
       unused(i) = trans_nasd
 !  Apply Patton et al. 2020 curvature formula where values of the process-based formula for soil depth are undefined.
 !  Test to avoid negative argument of log() and division by zero and very small numbers
-      if (dif_ratio(zo(i))*trans_nasd > 0. .or. abs(trans_nasd) <= 0.0001) then
+      if (dif_ratio(zo(i)) * trans_nasd > 0. .or. abs(trans_nasd) <= 0.0001 &
+         & .or. dif_ratio(zo(i)) * del2gs(i) > 0.) then
         soil_depth(i)= C0(zo(i)) + C1(zo(i)) * del2gs(i) 
         if(soil_depth(i) < depth_min(zo(i))) soil_depth(i) = depth_min(zo(i))
         if(soil_depth(i) > depth_max(zo(i))) soil_depth(i) = depth_max(zo(i))

@@ -46,7 +46,7 @@ subroutine aspect(dzdx,dzdy,dipdr,dip,slpdr)
     slpdr=pi+atan(dzdy/dzdx)
   case(8); dipdr=pi
     slpdr=pi/2.
-  case(9); dipdr=pi/2.-atan(dzdy/dzdx) +pi
+  case(9); dipdr=pi/2.-atan(dzdy/dzdx) + pi
     slpdr=atan(dzdy/dzdx)
   end select
   if(dipdr>2.*pi) dipdr=dipdr-2.*pi

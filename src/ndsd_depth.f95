@@ -9,7 +9,7 @@
   implicit none
 ! LOCAL VARIABLES
   integer::i,i0,j0,l,iup,jup,m,n, chan_ctr
-  integer::ileft,iright,jnorth,jsouth,iup_cn,jup_cn
+  integer::ileft,iright,jnorth,jsouth,iup_cn,jup_cn, edge_count
   integer::ctr(4),maxd(imax),big(4)
   real(kind = 8)::n100,imax_dble
   real::Del_dotDelZ_nlso
@@ -81,30 +81,38 @@
 !  Left 1               Right 2
 !            South 4
 !
-    ileft=0; iright=0; jnorth=0; jsouth=0; edge=.true.
+    ileft=0; iright=0; jnorth=0; jsouth=0; edge=.true.; edge_count = 4
     if(i0>1) then
        if(cta(i0-1,j0)>0) then
           ileft=elev_index_lkup(cta(i0-1,j0))
           edge(1)=.false.
+          edge_count = edge_count - 1
        end if
     end if
     if(i0<ncol) then
        if(cta(i0+1,j0)>0) then
           iright=elev_index_lkup(cta(i0+1,j0))
           edge(2)=.false.
+          edge_count = edge_count - 1
        end if
     end if
     if(j0>1) then
        if(cta(i0,j0-1)>0) then
           jnorth=elev_index_lkup(cta(i0,j0-1))
           edge(3)=.false.
+          edge_count = edge_count - 1
        end if
     end if
     if(j0<nrow) then
        if(cta(i0,j0+1)>0) then
           jsouth=elev_index_lkup(cta(i0,j0+1))
           edge(4)=.false.
+          edge_count = edge_count - 1
        end if
+    end if
+    if(edge_count > 2) then ! Use average thickness at isolated and protruding cells.
+      soil_depth(m) = (depth_min(zo(m)) + depth_max(zo(m)))/2.
+      cycle
     end if
 ! compare elevation index of neighbors to each other and to cell m (of index n) to find iup and jup.
     iup=0; jup=0; iup_cn=0; jup_cn=0

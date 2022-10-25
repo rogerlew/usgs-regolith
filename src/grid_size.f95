@@ -1,6 +1,7 @@
 ! determine grid size parameters RLB 4/18/2011
   subroutine grid_size(elevfil,elfoldr,init, data_cells,row,col,nwf,ulog,usiz,uelev,&
    & celsiz,nodat)
+  implicit none
 ! FORMAL ARGUMENTS
   character(len=255), intent(in):: elevfil,init
   character(len=224), intent(out):: elfoldr
