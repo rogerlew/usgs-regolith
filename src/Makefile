@@ -14,7 +14,7 @@ CCFLAGS =
 FC = f95 -w -O3 
 FFLAGS =
 F90 = f95 
-F90FLAGS = -w -O3
+F90FLAGS = -w -O0
 LDFLAGS = 
 
 all: $(REG)

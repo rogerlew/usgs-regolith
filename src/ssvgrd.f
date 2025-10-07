@@ -45,7 +45,7 @@ c !  write grid
           write(scratch,1004) z2(j,i)
           scratch=adjustl(scratch)
           if(j.ne.ncol) then
-            write(u,1010) trim(scratch),sp 
+            write(u,'(a)',advance='no') trim(scratch)//sp
           else
            write(u,1011) trim(scratch) 
           end if
@@ -58,7 +58,7 @@ c !  write grid
           end if
           scratch=adjustl(scratch)
           if(j.ne.ncol) then
-            write(u,1010) trim(scratch),sp 
+            write(u,'(a)',advance='no') trim(scratch)//sp
           else
             write(u,1011) trim(scratch) 
           end if
@@ -79,7 +79,6 @@ c !  write grid
         stop 'Output file not found in ssvgrd()'
  1003 format(f2.0)
  1004 format(g12.5)
- 1010 format(a,a,\)
  1011 format(a)
  1012 format(t1,a,t15,a)
       end

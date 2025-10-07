@@ -45,7 +45,7 @@ c !  write grid
             write(scratch,1005) int(z2(j,i))
             scratch=adjustl(scratch)
             if(j.ne.ncol) then
-              write(u,1010) trim(scratch),sp 
+              write(u,'(a)',advance='no') trim(scratch)//sp
             else
               write(u,1011) trim(scratch) 
             end if
@@ -54,7 +54,7 @@ c !  write grid
             write(scratch,1005) z3(ctr)
             scratch=adjustl(scratch)
             if(j.ne.ncol) then
-              write(u,1010) trim(scratch),sp 
+              write(u,'(a)',advance='no') trim(scratch)//sp
             else
               write(u,1011) trim(scratch) 
             end if
@@ -74,7 +74,6 @@ c !  write grid
       write (u1,*) 'Subroutine isvgrd()'
       stop 'Output file error in isvgrd()'
  1005 format(i12)
- 1010 format(a,a,\)
  1011 format(a)
  1012 format(t1,a,t15,a)
       end
